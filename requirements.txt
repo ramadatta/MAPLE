@@ -1,0 +1,10 @@
+chainlit
+openai
+pydantic
+pandas
+python-dotenv
+requests
+biopython
+diskcache
+mcp
+pytest

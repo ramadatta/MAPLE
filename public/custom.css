@@ -1,0 +1,1538 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   MAPLE — Claude light theme (warm cream canvas · terracotta accent)
+   ───────────────────────────────────────────────────────────────────────────── */
+
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap");
+
+:root {
+  --maple-bg:            #faf9f5;
+  --maple-bg-elevated:   #f5f4ef;
+  --maple-surface:       #ffffff;
+  --maple-surface-solid: #ffffff;
+  --maple-surface-2:     #f0efe8;
+  --maple-border:        #e8e6dc;
+  --maple-border-strong:   #d4d1c7;
+
+  --maple-accent:        #c96442;
+  --maple-accent-hover:  #b85a3c;
+  --maple-accent-soft:   rgba(201, 100, 66, 0.10);
+  --maple-teal:          #c96442;
+  --maple-teal-soft:     rgba(201, 100, 66, 0.08);
+  --maple-violet:        #8b7355;
+  --maple-violet-soft:   rgba(139, 115, 85, 0.08);
+  --maple-emerald:       #2f7a4f;
+  --maple-amber:         #b8860b;
+  --maple-orange:        #c96442;
+  --maple-rose:          #b84a4a;
+
+  --maple-text:          #1f1e1d;
+  --maple-text-muted:    #6b6a65;
+  --maple-text-soft:     #3d3c38;
+
+  --maple-content-max:   min(96vw, 1680px);
+  --maple-search-width:  min(584px, 94vw);
+  --maple-radius:        18px;
+  --maple-radius-sm:     10px;
+  --maple-shadow:        0 8px 32px rgba(31, 30, 29, 0.08);
+  --maple-glow:          0 0 0 1px rgba(201, 100, 66, 0.06), 0 12px 40px rgba(201, 100, 66, 0.06);
+
+  --maple-font:          "DM Sans", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --maple-mono:          "JetBrains Mono", ui-monospace, monospace;
+}
+
+/* ── Base ─────────────────────────────────────────────────────────────────── */
+body,
+#root {
+  font-family: var(--maple-font) !important;
+  color-scheme: light;
+  background: var(--maple-bg) !important;
+  color: var(--maple-text) !important;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Full-width layout ─────────────────────────────────────────────────────── */
+[class*="max-w-"],
+.prose,
+[class*="markdown"],
+[class*="MessageContent"],
+[class*="messageContent"],
+[class*="assistant-message"] > div,
+[class*="user-message"] > div {
+  max-width: none !important;
+}
+
+main,
+[class*="mainContent"],
+[class*="chat"],
+[class*="messages"],
+[class*="Messages"],
+[class*="message-list"],
+[class*="MessageList"] {
+  width: 100% !important;
+  max-width: var(--maple-content-max) !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  padding-left: clamp(12px, 2vw, 28px) !important;
+  padding-right: clamp(12px, 2vw, 28px) !important;
+}
+
+.maple-wide-block {
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Hide MCP/tool-call steps only — do NOT hide .step (Chainlit uses it for all messages). */
+[data-step-type="tool"] {
+  display: none !important;
+}
+
+::-webkit-scrollbar              { width: 6px; height: 6px; }
+::-webkit-scrollbar-track        { background: transparent; }
+::-webkit-scrollbar-thumb        { background: #ccc9be; border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover  { background: #b8b5aa; }
+
+/* ── Shell ─────────────────────────────────────────────────────────────────── */
+header,
+[class*="header"],
+[class*="Header"] {
+  background: rgba(250, 249, 245, 0.92) !important;
+  backdrop-filter: blur(12px) !important;
+  border-bottom: 1px solid var(--maple-border) !important;
+}
+
+[class*="appName"],
+[class*="AppName"] {
+  background: linear-gradient(135deg, var(--maple-teal), var(--maple-violet)) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  color: transparent !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.04em !important;
+}
+
+[class*="sidebar"],
+[class*="Sidebar"],
+[class*="threadHistory"],
+[class*="ThreadHistory"] {
+  background: var(--maple-bg-elevated) !important;
+  border-right: 1px solid var(--maple-border) !important;
+}
+
+main,
+[class*="mainContent"],
+[class*="chat"] {
+  background: transparent !important;
+}
+
+/* ── Messages ───────────────────────────────────────────────────────────────── */
+[data-testid="user-message"],
+[class*="user-message"],
+[class*="UserMessage"] {
+  background: var(--maple-surface) !important;
+  border: 1px solid var(--maple-border) !important;
+  border-radius: var(--maple-radius) !important;
+  box-shadow: var(--maple-shadow) !important;
+  color: var(--maple-text) !important;
+}
+
+/* Run-step chrome (on_message / on_chat_start wrappers) — hide header bar only, keep child messages visible */
+[data-step-type="run"] > [class*="stepHeader"],
+[data-step-type="run"] > [class*="StepHeader"] {
+  display: none !important;
+}
+
+/* ── Typography in assistant messages ──────────────────────────────────────── */
+h1, h2, h3, h4 {
+  color: var(--maple-text) !important;
+  letter-spacing: -0.02em;
+}
+
+p, li {
+  line-height: 1.65 !important;
+}
+
+a {
+  color: var(--maple-accent) !important;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+a:hover {
+  color: var(--maple-accent-hover) !important;
+  text-decoration: underline;
+}
+
+pre,
+code,
+[class*="codeBlock"],
+[class*="CodeBlock"] {
+  background: var(--maple-surface-2) !important;
+  border: 1px solid var(--maple-border) !important;
+  border-radius: 12px !important;
+  font-family: var(--maple-mono) !important;
+  font-size: 13px !important;
+  color: #5c4a3a !important;
+}
+
+p code,
+li code {
+  background: var(--maple-surface-2) !important;
+  color: var(--maple-accent) !important;
+  padding: 2px 6px !important;
+  border-radius: 6px !important;
+}
+
+/* ── Markdown tables ───────────────────────────────────────────────────────── */
+table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 13px;
+  margin: 16px 0 24px;
+  border: 1px solid var(--maple-border);
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--maple-surface);
+}
+
+th {
+  background: var(--maple-surface-2) !important;
+  color: var(--maple-accent) !important;
+  font-weight: 600;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--maple-border-strong);
+  text-align: left;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--maple-border);
+  color: var(--maple-text-soft);
+  vertical-align: top;
+  line-height: 1.5;
+}
+
+tr:last-child td {
+  border-bottom: none;
+}
+
+tr:nth-child(even) td {
+  background: var(--maple-bg-elevated);
+}
+
+tr:hover td {
+  background: var(--maple-accent-soft);
+}
+
+/* ── Composer ──────────────────────────────────────────────────────────────── */
+textarea,
+[class*="inputBox"],
+[class*="Composer"],
+[class*="composer"],
+[class*="messageInput"] {
+  background: rgba(15, 23, 42, 0.88) !important;
+  border: 1px solid var(--maple-border) !important;
+  border-radius: 18px !important;
+  color: var(--maple-text) !important;
+  font-family: var(--maple-font) !important;
+  font-size: 14px !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+textarea::placeholder {
+  color: var(--maple-text-muted) !important;
+}
+
+textarea:focus,
+[class*="inputBox"]:focus-within,
+[class*="Composer"]:focus-within {
+  border-color: rgba(45, 212, 191, 0.55) !important;
+  box-shadow: 0 0 0 4px rgba(45, 212, 191, 0.12) !important;
+  outline: none !important;
+}
+
+button[class*="send"],
+button[aria-label*="send"],
+button[type="submit"] {
+  background: linear-gradient(135deg, #14b8a6, #6366f1) !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: 12px !important;
+  font-weight: 700 !important;
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+button[class*="send"]:hover,
+button[type="submit"]:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
+[class*="ActionButton"],
+[class*="action-button"] {
+  background: rgba(15, 23, 42, 0.7) !important;
+  border: 1px solid var(--maple-border) !important;
+  color: var(--maple-text) !important;
+  border-radius: 999px !important;
+}
+
+[class*="ActionButton"]:hover,
+[class*="action-button"]:hover {
+  border-color: rgba(45, 212, 191, 0.45) !important;
+  color: var(--maple-teal) !important;
+}
+
+[class*="newChat"],
+[class*="new-chat"],
+[class*="NewChat"] {
+  background: linear-gradient(135deg, #14b8a6, #6366f1) !important;
+  color: #fff !important;
+  border-radius: 12px !important;
+  font-weight: 700 !important;
+}
+
+.MuiButton-containedPrimary {
+  background: linear-gradient(135deg, #14b8a6, #6366f1) !important;
+}
+
+.MuiLinearProgress-bar,
+.MuiCircularProgress-svg {
+  color: var(--maple-teal) !important;
+}
+
+hr,
+[class*="divider"],
+[class*="Divider"] {
+  border-color: var(--maple-border) !important;
+}
+
+/* ── MAPLE custom components ───────────────────────────────────────────────── */
+.maple-animate {
+  animation: maple-rise 0.55s ease both;
+}
+
+.maple-visible,
+.maple-animate {
+  animation: maple-rise 0.55s ease both;
+}
+
+@keyframes maple-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .maple-animate,
+  .maple-visible {
+    animation: none;
+  }
+}
+
+.maple-hero,
+.maple-result-hero,
+.maple-banner,
+.maple-card,
+.maple-table-intro {
+  font-family: var(--maple-font);
+}
+
+.maple-hero {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--maple-border);
+  border-radius: 24px;
+  background:
+    linear-gradient(180deg, rgba(15, 23, 42, 0.92), rgba(7, 11, 18, 0.96));
+  box-shadow: var(--maple-shadow);
+  margin: 4px 0 18px;
+}
+
+.maple-hero-glow,
+.maple-result-glow {
+  position: absolute;
+  inset: -30% auto auto -10%;
+  width: 420px;
+  height: 420px;
+  background: radial-gradient(circle, rgba(45, 212, 191, 0.18), transparent 68%);
+  pointer-events: none;
+}
+
+.maple-hero-inner,
+.maple-result-content {
+  position: relative;
+  padding: 28px 28px 24px;
+}
+
+.maple-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(45, 212, 191, 0.25);
+  background: rgba(45, 212, 191, 0.08);
+  color: #99f6e4;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.maple-hero-title {
+  margin: 16px 0 6px;
+  font-size: clamp(2.4rem, 5vw, 3.4rem);
+  line-height: 1;
+  letter-spacing: -0.05em;
+  background: linear-gradient(135deg, #f8fafc 10%, #99f6e4 45%, #a5b4fc 90%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.maple-hero-subtitle {
+  margin: 0 0 12px;
+  color: var(--maple-text-soft);
+  font-size: 1.05rem;
+  font-weight: 500;
+}
+
+.maple-hero-lead,
+.maple-hero-footnote,
+.maple-body-text,
+.maple-banner-body,
+.maple-table-intro-copy {
+  color: var(--maple-text-muted);
+  line-height: 1.65;
+}
+
+.maple-hero-lead {
+  max-width: 760px;
+  margin: 0 0 18px;
+}
+
+.maple-hero-footnote {
+  margin: 18px 0 0;
+  font-size: 0.92rem;
+}
+
+.maple-pill-row,
+.maple-chip-row,
+.maple-result-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.maple-pill,
+.maple-chip,
+.maple-umap-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--maple-border);
+  background: rgba(15, 23, 42, 0.65);
+  color: var(--maple-text-soft);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.maple-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.maple-card {
+  border: 1px solid var(--maple-border);
+  border-radius: var(--maple-radius);
+  background: rgba(15, 23, 42, 0.72);
+  backdrop-filter: blur(12px);
+  box-shadow: var(--maple-glow);
+}
+
+.maple-card-soft {
+  padding: 16px 18px;
+}
+
+.maple-card-kicker,
+.maple-result-eyebrow,
+.maple-table-intro-title {
+  color: var(--maple-teal);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.maple-code {
+  margin: 0;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: rgba(2, 6, 23, 0.85) !important;
+  border: 1px solid var(--maple-border) !important;
+  color: #a7f3d0 !important;
+  font-family: var(--maple-mono) !important;
+  font-size: 12.5px !important;
+  line-height: 1.55 !important;
+  white-space: pre-wrap;
+}
+
+.maple-banner {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  padding: 16px 18px;
+  border-radius: var(--maple-radius);
+  border: 1px solid var(--maple-border);
+  background: rgba(15, 23, 42, 0.78);
+  margin: 8px 0 14px;
+}
+
+.maple-banner-icon {
+  font-size: 1.2rem;
+  line-height: 1;
+  margin-top: 2px;
+}
+
+.maple-banner-title {
+  color: var(--maple-text);
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.maple-banner-info {
+  border-color: rgba(45, 212, 191, 0.22);
+  background: linear-gradient(180deg, rgba(45, 212, 191, 0.08), rgba(15, 23, 42, 0.78));
+}
+
+.maple-banner-success {
+  border-color: rgba(52, 211, 153, 0.25);
+  background: linear-gradient(180deg, rgba(52, 211, 153, 0.08), rgba(15, 23, 42, 0.78));
+}
+
+.maple-banner-warning {
+  border-color: rgba(251, 191, 36, 0.25);
+  background: linear-gradient(180deg, rgba(251, 191, 36, 0.08), rgba(15, 23, 42, 0.78));
+}
+
+.maple-banner-error {
+  border-color: rgba(251, 113, 133, 0.25);
+  background: linear-gradient(180deg, rgba(251, 113, 133, 0.08), rgba(15, 23, 42, 0.78));
+}
+
+.maple-result-hero {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(45, 212, 191, 0.22);
+  border-radius: 22px;
+  background:
+    linear-gradient(135deg, rgba(45, 212, 191, 0.10), rgba(129, 140, 248, 0.08)),
+    rgba(15, 23, 42, 0.88);
+  margin: 0 0 16px;
+  box-shadow: var(--maple-shadow);
+}
+
+.maple-result-type {
+  margin: 8px 0 14px;
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  color: var(--maple-text);
+}
+
+.maple-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.maple-badge-high,
+.maple-score-fill.maple-badge-high {
+  background: rgba(52, 211, 153, 0.16);
+  color: #6ee7b7;
+  border: 1px solid rgba(52, 211, 153, 0.28);
+}
+
+.maple-badge-medium,
+.maple-score-fill.maple-badge-medium {
+  background: rgba(251, 191, 36, 0.14);
+  color: #fcd34d;
+  border: 1px solid rgba(251, 191, 36, 0.28);
+}
+
+.maple-badge-low,
+.maple-score-fill.maple-badge-low {
+  background: rgba(251, 146, 60, 0.14);
+  color: #fdba74;
+  border: 1px solid rgba(251, 146, 60, 0.28);
+}
+
+.maple-badge-insufficient,
+.maple-score-fill.maple-badge-insufficient {
+  background: rgba(251, 113, 133, 0.12);
+  color: #fda4af;
+  border: 1px solid rgba(251, 113, 133, 0.24);
+}
+
+.maple-score-track {
+  height: 8px;
+  margin-top: 16px;
+  border-radius: 999px;
+  background: rgba(2, 6, 23, 0.65);
+  overflow: hidden;
+}
+
+.maple-score-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--maple-teal), var(--maple-violet));
+}
+
+.maple-section-card {
+  padding: 18px 18px 16px;
+  margin-bottom: 14px;
+}
+
+.maple-section-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.maple-section-icon {
+  font-size: 1rem;
+}
+
+.maple-section-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--maple-text);
+}
+
+.maple-section-body .maple-body-text {
+  margin: 0 0 10px;
+  color: var(--maple-text-soft);
+}
+
+.maple-section-body .maple-body-text:last-child {
+  margin-bottom: 0;
+}
+
+.maple-list {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--maple-text-soft);
+}
+
+.maple-list li {
+  margin-bottom: 8px;
+}
+
+.maple-muted {
+  color: var(--maple-text-muted);
+  margin: 0;
+}
+
+.maple-chip-muted {
+  opacity: 0.7;
+}
+
+.maple-table-intro {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  padding: 16px 18px;
+  margin: 8px 0 12px;
+  border: 1px solid var(--maple-border);
+  border-radius: var(--maple-radius);
+  background: rgba(15, 23, 42, 0.72);
+}
+
+.maple-table-intro-icon {
+  font-size: 1.5rem;
+}
+
+.maple-table-intro-title {
+  margin: 0 0 4px;
+  font-size: 1rem;
+}
+
+.maple-evidence-shell {
+  border: 1px solid var(--maple-border);
+  border-radius: var(--maple-radius);
+  padding: 16px;
+  background: rgba(15, 23, 42, 0.72);
+  margin: 12px 0;
+}
+
+.maple-evidence-shell h3 {
+  margin: 0 0 6px;
+  color: var(--maple-text);
+}
+
+.maple-evidence-shell small {
+  color: var(--maple-text-muted);
+}
+
+/* ── Claude landing + centered search (Google-style) ───────────────────────── */
+.maple-landing {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 10vh 16px 0;
+  overflow: visible;
+  background: transparent;
+}
+
+.maple-landing-orb {
+  display: none;
+}
+
+.maple-landing-center {
+  position: relative;
+  text-align: center;
+  width: 100%;
+  max-width: 720px;
+}
+
+.maple-logo-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  margin-bottom: 20px;
+  border-radius: 14px;
+  background: var(--maple-accent-soft);
+  border: 1px solid rgba(201, 100, 66, 0.18);
+  color: var(--maple-accent);
+}
+
+.maple-landing-title {
+  margin: 0 0 10px;
+  font-size: clamp(1.85rem, 4.5vw, 2.5rem);
+  line-height: 1.12;
+  letter-spacing: -0.03em;
+  font-weight: 600;
+  color: var(--maple-text);
+}
+
+.maple-landing-subtitle {
+  margin: 0 auto 28px;
+  max-width: 520px;
+  color: var(--maple-text-muted);
+  font-size: 1rem;
+  line-height: 1.55;
+}
+
+.maple-composer-anchor {
+  height: 64px;
+  width: var(--maple-search-width);
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+.maple-landing-hints {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 88px;
+}
+
+.maple-hint-chip {
+  padding: 7px 13px;
+  border-radius: 999px;
+  border: 1px solid var(--maple-border);
+  background: var(--maple-surface);
+  color: var(--maple-text-muted);
+  font-size: 12px;
+  box-shadow: 0 1px 2px rgba(31, 30, 29, 0.04);
+}
+
+/* Landing page layout: center content + search in viewport middle */
+body.maple-landing-mode #root {
+  min-height: 100vh;
+}
+
+body.maple-landing-mode header {
+  background: transparent !important;
+  border-bottom: none !important;
+}
+
+body.maple-landing-mode main,
+body.maple-landing-mode [class*="mainContent"] {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: flex-start !important;
+  min-height: calc(100vh - 56px) !important;
+  padding-top: 0 !important;
+}
+
+body.maple-landing-mode footer,
+body.maple-landing-mode .maple-composer-centered {
+  position: fixed !important;
+  top: 46% !important;
+  left: 50% !important;
+  right: auto !important;
+  bottom: auto !important;
+  transform: translate(-50%, -50%) !important;
+  width: var(--maple-search-width) !important;
+  max-width: var(--maple-search-width) !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  z-index: 40;
+}
+
+body.maple-landing-mode .maple-landing {
+  padding-top: 16vh;
+  pointer-events: none;
+}
+
+body.maple-landing-mode .maple-landing * {
+  pointer-events: auto;
+}
+
+/* After first query: composer returns to bottom */
+body.maple-chat-mode footer {
+  position: sticky !important;
+  bottom: 0 !important;
+  top: auto !important;
+  left: auto !important;
+  transform: none !important;
+  width: 100% !important;
+  max-width: var(--maple-content-max) !important;
+  margin: 0 auto !important;
+}
+
+/* ── Claude-style search composer ──────────────────────────────────────────── */
+[class*="Composer"],
+[class*="composer"],
+[class*="messageInput"],
+footer {
+  max-width: var(--maple-content-max) !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+textarea,
+[class*="inputBox"],
+[class*="Composer"],
+[class*="composer"],
+[class*="messageInput"] {
+  background: var(--maple-surface-solid) !important;
+  border: 1px solid var(--maple-border-strong) !important;
+  border-radius: 28px !important;
+  min-height: 56px !important;
+  color: var(--maple-text) !important;
+  box-shadow: 0 2px 12px rgba(31, 30, 29, 0.06), 0 1px 3px rgba(31, 30, 29, 0.04) !important;
+}
+
+textarea::placeholder {
+  color: var(--maple-text-muted) !important;
+}
+
+textarea:focus,
+[class*="inputBox"]:focus-within,
+[class*="Composer"]:focus-within {
+  border-color: rgba(201, 100, 66, 0.45) !important;
+  box-shadow: 0 0 0 4px rgba(201, 100, 66, 0.10), 0 2px 12px rgba(31, 30, 29, 0.06) !important;
+}
+
+button[class*="send"],
+button[aria-label*="send"],
+button[type="submit"] {
+  background: var(--maple-accent) !important;
+  color: #fff !important;
+  border-radius: 14px !important;
+}
+
+button[class*="send"]:hover,
+button[type="submit"]:hover {
+  background: var(--maple-accent-hover) !important;
+}
+
+[class*="appName"],
+[class*="AppName"] {
+  color: var(--maple-text) !important;
+  background: none !important;
+  -webkit-background-clip: unset !important;
+  background-clip: unset !important;
+  font-weight: 600 !important;
+}
+
+/* ── Compact progress (processing only) ────────────────────────────────────── */
+.maple-progress {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  margin: 8px 0 16px;
+  border: 1px solid var(--maple-border);
+  border-radius: 14px;
+  background: var(--maple-surface);
+  box-shadow: var(--maple-shadow);
+  max-width: 560px;
+}
+
+.maple-progress-spinner {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  border: 2px solid rgba(201, 100, 66, 0.20);
+  border-top-color: var(--maple-accent);
+  animation: maple-spin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes maple-spin {
+  to { transform: rotate(360deg); }
+}
+
+.maple-progress-label {
+  font-weight: 600;
+  color: var(--maple-text);
+}
+
+.maple-progress-detail {
+  margin-top: 2px;
+  font-size: 0.88rem;
+  color: var(--maple-text-muted);
+}
+
+/* ── DataTables (sort + pagination) ────────────────────────────────────────── */
+.maple-table-shell {
+  background: var(--maple-surface);
+  box-shadow: var(--maple-shadow);
+}
+
+.maple-table-intro {
+  background: var(--maple-surface);
+}
+
+.maple-card,
+.maple-result-hero,
+.maple-banner,
+.maple-hero {
+  background: var(--maple-surface) !important;
+  border-color: var(--maple-border) !important;
+  box-shadow: var(--maple-shadow) !important;
+}
+
+.maple-result-hero {
+  background: linear-gradient(180deg, #fff, var(--maple-bg-elevated)) !important;
+}
+
+.maple-badge-high { background: rgba(47, 122, 79, 0.12); color: #2f7a4f; border-color: rgba(47, 122, 79, 0.25); }
+.maple-badge-medium { background: rgba(184, 134, 11, 0.12); color: #8a6914; border-color: rgba(184, 134, 11, 0.25); }
+.maple-badge-low { background: rgba(201, 100, 66, 0.12); color: #a04e32; border-color: rgba(201, 100, 66, 0.25); }
+.maple-badge-insufficient { background: rgba(184, 74, 74, 0.10); color: #9a3a3a; border-color: rgba(184, 74, 74, 0.22); }
+
+table.maple-datatable {
+  width: 100% !important;
+  margin: 0 !important;
+}
+
+.dataTables_wrapper {
+  color: var(--maple-text-soft) !important;
+  font-size: 13px;
+}
+
+.dataTables_wrapper .dataTables_length,
+.dataTables_wrapper .dataTables_filter,
+.dataTables_wrapper .dataTables_info,
+.dataTables_wrapper .dataTables_paginate {
+  color: var(--maple-text-muted) !important;
+  padding: 8px 4px;
+}
+
+.dataTables_wrapper .dataTables_filter input,
+.dataTables_wrapper .dataTables_length select {
+  background: var(--maple-surface-solid) !important;
+  border: 1px solid var(--maple-border) !important;
+  color: var(--maple-text) !important;
+  border-radius: 8px !important;
+  padding: 6px 10px !important;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+  color: var(--maple-text-soft) !important;
+  border: 1px solid var(--maple-border) !important;
+  border-radius: 8px !important;
+  background: transparent !important;
+  margin: 0 2px !important;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button.current,
+.dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+  background: var(--maple-accent-soft) !important;
+  border-color: rgba(217, 119, 87, 0.35) !important;
+  color: var(--maple-text) !important;
+}
+
+table.dataTable thead th {
+  cursor: pointer;
+}
+
+/* ── MAPLE Audit Trail ──────────────────────────────────────────────────────── */
+.maple-audit-trail {
+  border: 1px solid var(--maple-border);
+  border-radius: var(--maple-radius);
+  background: var(--maple-surface);
+  box-shadow: var(--maple-shadow);
+  padding: 18px 20px;
+  margin: 8px 0 14px;
+  font-size: 13px;
+}
+
+.maple-audit-header {
+  margin-bottom: 10px;
+}
+
+.maple-audit-title {
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: var(--maple-text);
+  letter-spacing: 0.01em;
+}
+
+.maple-audit-rule {
+  border: none;
+  border-top: 1px solid var(--maple-border);
+  margin: 10px 0 12px;
+}
+
+.maple-audit-entries {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.maple-audit-entry {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  line-height: 1.5;
+}
+
+.maple-agent-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--maple-border);
+  background: var(--maple-surface-2);
+  color: var(--maple-accent);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.maple-audit-entry-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.maple-audit-message {
+  color: var(--maple-text-soft);
+}
+
+.maple-audit-detail {
+  font-size: 12px;
+  color: var(--maple-text-muted);
+  font-style: italic;
+}
+
+.maple-audit-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  background: var(--maple-bg-elevated);
+  border: 1px solid var(--maple-border);
+  border-radius: var(--maple-radius-sm);
+  font-size: 12px;
+  color: var(--maple-text-muted);
+}
+
+.maple-audit-stat {
+  line-height: 1.5;
+}
+
+.maple-audit-errors {
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: rgba(184,74,74,0.07);
+  border: 1px solid rgba(184,74,74,0.20);
+  border-radius: var(--maple-radius-sm);
+  font-size: 12px;
+  color: var(--maple-rose);
+}
+
+/* ── MAPLE Consensus Panel ──────────────────────────────────────────────────── */
+.maple-consensus-panel {
+  border: 1px solid var(--maple-border);
+  border-radius: var(--maple-radius);
+  background: var(--maple-surface);
+  box-shadow: var(--maple-shadow);
+  padding: 22px 24px 18px;
+  margin: 8px 0 14px;
+}
+
+.maple-consensus-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.maple-consensus-label {
+  margin: 0;
+  font-size: clamp(1.5rem, 3.5vw, 2.2rem);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.025em;
+  color: var(--maple-text);
+  flex: 1 0 auto;
+}
+
+.maple-consensus-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.maple-consensus-section {
+  border-top: 1px solid var(--maple-border);
+  padding-top: 12px;
+}
+
+.maple-consensus-section h4 {
+  margin: 0 0 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--maple-accent);
+}
+
+/* Confidence badge colour variants */
+.maple-confidence-high {
+  background: rgba(47, 122, 79, 0.12);
+  color: #2f7a4f;
+  border: 1px solid rgba(47, 122, 79, 0.28);
+}
+
+.maple-confidence-medium {
+  background: rgba(184, 134, 11, 0.12);
+  color: #8a6914;
+  border: 1px solid rgba(184, 134, 11, 0.28);
+}
+
+.maple-confidence-low {
+  background: rgba(201, 100, 66, 0.12);
+  color: #a04e32;
+  border: 1px solid rgba(201, 100, 66, 0.28);
+}
+
+.maple-confidence-insufficient {
+  background: rgba(184, 74, 74, 0.10);
+  color: #9a3a3a;
+  border: 1px solid rgba(184, 74, 74, 0.22);
+}
+
+/* Research disclaimer */
+.maple-disclaimer {
+  padding: 10px 14px;
+  background: rgba(184, 134, 11, 0.07);
+  border: 1px solid rgba(184, 134, 11, 0.20);
+  border-radius: var(--maple-radius-sm);
+  font-size: 12px;
+  color: var(--maple-text-muted);
+  line-height: 1.5;
+}
+
+/* ── MAPLE Devil's Advocate Panel ───────────────────────────────────────────── */
+.maple-da-panel {
+  border: 1px solid var(--maple-border);
+  border-left: 3px solid var(--maple-rose);
+  border-radius: var(--maple-radius);
+  background: var(--maple-surface);
+  box-shadow: var(--maple-shadow);
+  padding: 18px 20px;
+  margin: 8px 0 14px;
+}
+
+.maple-da-header {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.maple-da-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--maple-text);
+}
+
+.maple-da-adj {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.maple-da-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.maple-da-section h4 {
+  margin: 0 0 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--maple-text-muted);
+}
+
+/* ── MAPLE Evidence Table Container ─────────────────────────────────────────── */
+.maple-evidence-table-container {
+  border: 1px solid var(--maple-border);
+  border-radius: var(--maple-radius);
+  background: var(--maple-surface);
+  box-shadow: var(--maple-shadow);
+  padding: 18px 20px;
+  margin: 8px 0 14px;
+  overflow: hidden;
+}
+
+.maple-evidence-table-container h3 {
+  margin: 0 0 12px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--maple-text);
+}
+
+.maple-evidence-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.maple-evidence-table th,
+.maple-evidence-table td {
+  padding: 9px 11px;
+  border-bottom: 1px solid var(--maple-border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.maple-evidence-table th {
+  background: var(--maple-surface-2);
+  color: var(--maple-accent);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  white-space: nowrap;
+}
+
+.maple-evidence-table tr:last-child td {
+  border-bottom: none;
+}
+
+.maple-evidence-table tr:nth-child(even) td {
+  background: var(--maple-bg-elevated);
+}
+
+.maple-evidence-table tr:hover td {
+  background: var(--maple-accent-soft);
+}
+
+.maple-source-passage {
+  min-width: 360px;
+  max-width: 620px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--maple-text-muted);
+  white-space: normal;
+}
+
+/* ── MAPLE Table Navigation Bar ─────────────────────────────────────────────── */
+.maple-table-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 10px 12px;
+  background: var(--maple-bg-elevated);
+  border: 1px solid var(--maple-border);
+  border-radius: var(--maple-radius-sm);
+  font-size: 13px;
+  color: var(--maple-text-soft);
+  line-height: 1.7;
+}
+
+.maple-table-nav code {
+  background: var(--maple-surface-2) !important;
+  color: var(--maple-accent) !important;
+  padding: 1px 5px !important;
+  border-radius: 5px !important;
+  font-size: 11px !important;
+}
+
+.maple-table-toolbar {
+  margin: 0 0 10px;
+}
+
+.maple-table-filter {
+  width: min(320px, 100%);
+  padding: 8px 12px;
+  border: 1px solid var(--maple-border-strong);
+  border-radius: 10px;
+  background: var(--maple-surface-solid);
+  color: var(--maple-text);
+  font-family: var(--maple-font);
+  font-size: 13px;
+}
+
+.maple-table-filter:focus {
+  outline: none;
+  border-color: rgba(201, 100, 66, 0.45);
+  box-shadow: 0 0 0 3px rgba(201, 100, 66, 0.10);
+}
+
+.maple-evidence-table th[data-sort-key] {
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.maple-evidence-table th[data-sort-key]:hover {
+  background: var(--maple-accent-soft);
+}
+
+.maple-evidence-table th.maple-sort-asc::after,
+.maple-evidence-table th.maple-sort-desc::after {
+  font-size: 10px;
+  margin-left: 4px;
+  color: var(--maple-accent);
+}
+
+.maple-evidence-table th.maple-sort-asc::after {
+  content: "▲";
+}
+
+.maple-evidence-table th.maple-sort-desc::after {
+  content: "▼";
+}
+
+.maple-table-prev,
+.maple-table-next {
+  padding: 6px 12px;
+  border: 1px solid var(--maple-border-strong);
+  border-radius: 8px;
+  background: var(--maple-surface-solid);
+  color: var(--maple-text);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.maple-table-prev:hover:not(:disabled),
+.maple-table-next:hover:not(:disabled) {
+  border-color: var(--maple-accent);
+  background: var(--maple-accent-soft);
+}
+
+.maple-table-prev:disabled,
+.maple-table-next:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.maple-table-hint {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--maple-text-muted);
+}
+
+@media (max-width: 720px) {
+  .maple-hero-inner,
+  .maple-result-content {
+    padding: 22px 18px;
+  }
+
+  .maple-grid-2 {
+    grid-template-columns: 1fr;
+  }
+
+  .maple-landing {
+    min-height: 44vh;
+    padding-top: 32px;
+  }
+
+  .maple-consensus-panel,
+  .maple-da-panel,
+  .maple-audit-trail,
+  .maple-evidence-table-container {
+    padding: 14px 14px;
+  }
+}
+
+/* ── UI polish ─────────────────────────────────────────────────────────────── */
+
+/* Composer: horizontal breathing room so text isn't clipped by the rounded edge */
+textarea,
+[class*="inputBox"] textarea,
+[class*="Composer"] textarea {
+  padding: 14px 22px !important;
+  line-height: 1.5 !important;
+}
+
+/* Light theme only — hide the dark/light toggle so it can't half-restyle the UI */
+button[aria-label*="theme" i],
+button[aria-label*="dark mode" i],
+button[aria-label*="light mode" i],
+[data-testid="theme-toggle"],
+[aria-label="Toggle theme"] {
+  display: none !important;
+}
+
+/* Landing: name expansion, one-click examples, author credit */
+.maple-landing-expansion {
+  margin: 0 auto 14px;
+  font-size: clamp(0.95rem, 2.2vw, 1.12rem);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--maple-accent);
+}
+
+.maple-example-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  margin-top: 96px;
+}
+
+.maple-example-label {
+  font-size: 12px;
+  color: var(--maple-text-muted);
+  margin-right: 2px;
+}
+
+.maple-example-chip {
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--maple-border-strong);
+  background: var(--maple-surface);
+  color: var(--maple-text-soft);
+  font-family: var(--maple-mono);
+  font-size: 12px;
+  cursor: pointer;
+  transition: border-color .15s ease, background .15s ease, color .15s ease;
+}
+
+.maple-example-chip:hover {
+  border-color: var(--maple-accent);
+  background: var(--maple-accent-soft);
+  color: var(--maple-accent);
+}
+
+.maple-credit {
+  margin: 22px auto 0;
+  font-size: 12px;
+  color: var(--maple-text-muted);
+}
+
+.maple-credit strong { color: var(--maple-text-soft); font-weight: 600; }
+
+/* Evidence table: break out of the narrow message column to full window width.
+   Full-bleed trick — works regardless of Chainlit's wrapper class names, as long
+   as the message column is centered (it is). */
+.maple-wide-block {
+  position: relative;
+  left: 50%;
+  width: 94vw;
+  max-width: 94vw;
+  margin-left: -47vw;
+  margin-right: -47vw;
+}
+
+/* Make sure no ancestor clips the wider block. */
+[class*="MessageContent"],
+[class*="messageContent"],
+[class*="assistant-message"],
+[class*="markdown"],
+.prose {
+  overflow: visible !important;
+  max-width: none !important;
+}
+
+.maple-table-scroll {
+  width: 100%;
+  overflow-x: auto;               /* safety on very narrow screens only */
+}
+
+.maple-evidence-table {
+  table-layout: fixed;
+  width: 100% !important;
+}
+
+.maple-evidence-table td {
+  white-space: normal !important;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  vertical-align: top;
+}
+
+/* Headers wrap only at spaces (never letter-by-letter like "G E N E S"). */
+.maple-evidence-table th {
+  white-space: normal !important;
+  word-break: normal !important;
+  overflow-wrap: normal !important;
+  vertical-align: top;
+}
+
+.maple-source-passage {
+  min-width: 0 !important;
+  max-width: none !important;
+}
+
+.maple-evidence-table td code {
+  white-space: normal !important;
+  word-break: break-all;
+}

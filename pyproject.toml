@@ -1,0 +1,62 @@
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "maple"
+version = "0.2.0-beta"
+description = "MAPLE — Marker-based Annotation with PubMed Literature Evidence: accurate cell-type annotation from marker genes"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [
+    { name = "MAPLE Contributors" }
+]
+keywords = ["single-cell", "annotation", "cell-type", "pubmed", "markers", "transcriptomics"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+]
+
+dependencies = [
+    "chainlit>=1.0.0",
+    "openai>=1.0.0",
+    "pydantic>=2.0.0",
+    "pandas>=1.3.0",
+    "python-dotenv>=0.19.0",
+    "requests>=2.25.0",
+    "diskcache>=5.2.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=3.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/fabianlab/maple"
+Documentation = "https://github.com/fabianlab/maple/blob/main/README.md"
+Repository = "https://github.com/fabianlab/maple"
+Issues = "https://github.com/fabianlab/maple/issues"
+
+[tool.setuptools]
+packages = ["celltype_annotator"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "--strict-markers -v"
+timeout = 300
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+]

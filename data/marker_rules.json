@@ -1,0 +1,59 @@
+{
+  "Fibroblast": {
+    "markers": ["COL1A1", "COL3A1", "DCN", "LUM", "PDGFRA", "COL6A1", "COL6A2"]
+  },
+  "Activated fibroblast": {
+    "markers": ["POSTN", "CTHRC1", "COL1A1", "COL3A1", "FN1", "THBS2"]
+  },
+  "Myofibroblast": {
+    "markers": ["ACTA2", "TAGLN", "MYH11", "CNN1", "TPM2"]
+  },
+  "Epithelial": {
+    "markers": ["EPCAM", "KRT8", "KRT18", "KRT19"]
+  },
+  "Alveolar type 1 epithelial": {
+    "markers": ["AGER", "PDPN", "SFTPD", "CLIC5", "PCDH16"]
+  },
+  "Alveolar type 2 epithelial": {
+    "markers": ["SFTPC", "SFTPB", "SFTPA1", "SFTPA2", "ABCA3", "LAMP3", "ETV5"]
+  },
+  "Club epithelial": {
+    "markers": ["SCGB1A1", "SCGB3A2"]
+  },
+  "Basal epithelial": {
+    "markers": ["KRT5", "KRT14", "KRT17", "TP63", "LAMB3", "LAMC2", "CDH2"]
+  },
+  "Aberrant basaloid": {
+    "markers": ["KRT17", "KRT8", "TP63", "CDKN1A", "CDKN2A", "CDH2", "VIM", "FN1", "COL1A1", "ITGB6", "MMP7", "GDF15", "HMGA2", "SOX9", "TNC"]
+  },
+  "Endothelial": {
+    "markers": ["PECAM1", "VWF", "KDR", "EMCN", "CLDN5", "PLVAP", "ACKR1"]
+  },
+  "Lymphatic endothelial": {
+    "markers": ["PROX1", "PDPN", "LYVE1"]
+  },
+  "Immune": {
+    "markers": ["PTPRC"]
+  },
+  "Macrophage": {
+    "markers": ["CD68", "CD14", "LYZ", "MARCO", "MSR1", "C1QA", "C1QB", "C1QC"]
+  },
+  "T cell": {
+    "markers": ["CD3D", "CD3E", "CD2", "TRAC"]
+  },
+  "B cell": {
+    "markers": ["MS4A1", "CD79A", "CD79B", "BANK1"]
+  },
+  "Plasma cell": {
+    "markers": ["MZB1", "JCHAIN", "XBP1", "IGKC"]
+  },
+  "Mast cell": {
+    "markers": ["TPSAB1", "TPSB2", "KIT", "CPA3"]
+  },
+  "Pericyte": {
+    "markers": ["RGS5", "CSPG4", "PDGFRB", "MCAM", "PRX", "VWA1"]
+  },
+  "Smooth muscle": {
+    "markers": ["ACTA2", "TAGLN", "MYH11", "CNN1", "MYLK"]
+  }
+}

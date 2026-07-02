@@ -1,0 +1,28 @@
+# Secrets — never commit (Blablador / Smithery / NCBI keys live here)
+.env
+.env.local
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Runtime / cache
+.cache/
+.chainlit/.files/
+.chainlit/*.db
+*.log
+debug_*.txt
+debug_output.txt
+debug_render_output.txt
+
+# OS / exports
+.DS_Store
+maple_evidence*.csv
+
+# NOTE: .chainlit/config.toml and .chainlit/translations/ ARE committed
+# (they carry the theme, name, layout and are needed at deploy time).
+maple.txt
