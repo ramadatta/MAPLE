@@ -130,8 +130,10 @@ cot = "hidden"
 default_sidebar_state = "closed"
 
 # Custom MAPLE theme (premium biotech palette).
-custom_css = "/public/custom.css"
-custom_js = "/public/custom.js"
+# NOTE: bump the ?v= number whenever custom.css / custom.js change, so browsers
+# fetch the new files instead of a stale cached copy.
+custom_css = "/public/custom.css?v=2"
+custom_js = "/public/custom.js?v=2"
 logo_file_url = "/public/maple-logo.svg"
 
 # The style of alert boxes. Can be "classic" or "modern".
