@@ -19,6 +19,16 @@ pinned: false
   quote from a real paper.
 </p>
 
+<p align="center">
+  <a href="https://huggingface.co/spaces/ramadatta88/MAPLE"><strong>🚀 Try the live demo on Hugging Face Spaces</strong></a>
+</p>
+
+<p align="center">
+  <a href="https://huggingface.co/spaces/ramadatta88/MAPLE">
+    <img src="https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Live%20Demo-blue" alt="Hugging Face Space">
+  </a>
+</p>
+
 <p align="center"><em>Research use only. Not a clinical or diagnostic tool.</em></p>
 
 ---
