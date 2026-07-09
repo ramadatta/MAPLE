@@ -16,6 +16,7 @@ __pycache__/
 .chainlit/*.db
 *.log
 debug_*.txt
+debug_*.py
 debug_output.txt
 debug_render_output.txt
 

@@ -44,6 +44,11 @@ such as "epithelial cells" or "immune cells").
 differential_expression_only, gene_mention_only.
 8. match_strength — High / Medium / Low.
 9. evidence_section — abstract / results / figure / table / supplement / unknown.
+10. tissue — the tissue / organ this cell type is described in, exactly as stated in the paper \
+(e.g. "lung", "liver", "peripheral blood"). Use "" if the paper does not state it.
+11. disease — the disease / condition context, as stated (e.g. "idiopathic pulmonary fibrosis", \
+"healthy", "COVID-19"). Use "" if not stated.
+12. species — the organism, as stated (e.g. "human", "mouse", "Mus musculus"). Use "" if not stated.
 
 RULES:
 - Produce ONE row per cell type. If the paper assigns several of the user genes to the same cell \
@@ -61,7 +66,8 @@ Return JSON: {{"rows": [{{"celltype_label": "...", "normalized_label": "...", \
 "matched_user_genes": [...], "evidence_snippet": "...", "marker_specific": true, \
 "specificity": "specific|intermediate|broad", \
 "evidence_type": "direct_marker_celltype_assignment|cluster_annotation|differential_expression_only|gene_mention_only", \
-"match_strength": "High|Medium|Low", "evidence_section": "..."}}]}}
+"match_strength": "High|Medium|Low", "evidence_section": "...", \
+"tissue": "...", "disease": "...", "species": "..."}}]}}
 """
 
 EVIDENCE_EXTRACTION_FULLTEXT_PLACEHOLDER = (

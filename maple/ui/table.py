@@ -222,17 +222,17 @@ def render_evidence_table_html(state: AnalysisState) -> str:
 
     colgroup = (
         '<colgroup>'
-        '<col style="width:4%">'    # # Genes
-        '<col style="width:10%">'   # Genes in Evidence
-        '<col style="width:13%">'   # Cell Type
-        '<col style="width:8%">'    # Evidence Type
-        '<col style="width:17%">'   # Paper Title
+        '<col style="width:3%">'    # # Genes
+        '<col style="width:9%">'    # Genes in Evidence
+        '<col style="width:14%">'   # Cell Type
+        '<col style="width:11%">'   # Evidence Type
+        '<col style="width:18%">'   # Paper Title
         '<col style="width:4%">'    # Year
         '<col style="width:6%">'    # Strength
-        '<col style="width:6%">'    # Tissue
-        '<col style="width:6%">'    # Disease
+        '<col style="width:7%">'    # Tissue
+        '<col style="width:7%">'    # Disease
         '<col style="width:5%">'    # Species
-        '<col style="width:21%">'   # Source Passage
+        '<col style="width:16%">'   # Source Passage
         '</colgroup>'
     )
 
@@ -243,6 +243,12 @@ def render_evidence_table_html(state: AnalysisState) -> str:
   <h3 style="margin:0 0 8px;color:var(--maple-text);">Evidence Table</h3>
   <div class="maple-table-toolbar">
     <input type="search" class="maple-table-filter" placeholder="Filter rows…" aria-label="Filter evidence rows">
+    <label class="maple-table-toggle" title="Show only cell types supported by 2 or more of your markers">
+      <input type="checkbox" class="maple-table-multigene" checked> ≥2 genes only
+    </label>
+    <button type="button" class="maple-table-csv" aria-label="Download full evidence table as CSV">
+      <span aria-hidden="true">⬇</span> Download CSV
+    </button>
   </div>
   <div class="maple-table-scroll">
     <table class="maple-evidence-table" style="width:100%;">
@@ -258,6 +264,15 @@ def render_evidence_table_html(state: AnalysisState) -> str:
     </table>
   </div>
   <div class="maple-table-nav">
+    <label class="maple-table-pagesize-label">Rows per page:
+      <select class="maple-table-pagesize" aria-label="Rows per page">
+        <option value="10" selected>10</option>
+        <option value="25">25</option>
+        <option value="50">50</option>
+        <option value="100">100</option>
+        <option value="-1">All</option>
+      </select>
+    </label>
     <button type="button" class="maple-table-prev" disabled>Prev</button>
     <span class="maple-table-page-info">Page <strong class="maple-table-page">1</strong> of <strong class="maple-table-pages">1</strong></span>
     <button type="button" class="maple-table-next" disabled>Next</button>

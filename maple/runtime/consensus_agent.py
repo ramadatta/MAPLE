@@ -373,8 +373,16 @@ def _llm_consensus(
         strongest_counterargument=devils_advocate.strongest_counterargument,
         adjustment=devils_advocate.recommended_confidence_adjustment,
         context_note=(
-            "User provided optional context (not used for retrieval ranking)."
-            if cfg.USE_USER_CONTEXT
+            "User focused the search on: "
+            + ", ".join(
+                f"{k}={v}" for k, v in (
+                    ("tissue", analysis_input.tissue),
+                    ("disease", analysis_input.disease),
+                    ("species", analysis_input.species),
+                ) if v
+            )
+            + ". Retrieval and ranking were biased toward this context."
+            if analysis_input.has_context
             else "No user tissue/disease context was applied to retrieval or scoring."
         ),
     )

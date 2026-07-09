@@ -14,6 +14,18 @@ logger = logging.getLogger(__name__)
 
 T = TypeVar("T", bound=BaseModel)
 
+# LLM response caching (opt-out via MAPLE_ENABLE_LLM_CACHE=false). Identical
+# (model, prompt, schema) requests are served from disk, so re-running the same
+# marker query is near-instant and costs no tokens.
+_LLM_CACHE_ENABLED = os.getenv("MAPLE_ENABLE_LLM_CACHE", "true").lower() not in ("0", "false", "no")
+
+
+def _llm_cache_key(model: str, full_system: str, user: str, schema_name: str) -> str:
+    return json.dumps(
+        {"model": model, "system": full_system, "user": user, "schema": schema_name},
+        sort_keys=True,
+    )
+
 SCIENTIFIC_SYSTEM_INSTRUCTION = (
     "You are a careful computational biologist. You must distinguish marker-based "
     "inference from literature-supported evidence. Never invent PMIDs, paper titles, "
@@ -141,6 +153,24 @@ class OpenAILLMService:
             f"\n\nReturn ONLY valid JSON matching this schema:\n{json.dumps(json_schema, indent=2)}"
         )
 
+        # ── Cache lookup ──────────────────────────────────────────────────────
+        cache = None
+        cache_key = ""
+        if _LLM_CACHE_ENABLED:
+            try:
+                from services.cache_service import get_cache
+
+                cache = get_cache()
+                cache_key = _llm_cache_key(
+                    self.model, full_system + schema_instruction, user, schema.__name__
+                )
+                cached = cache.get("llm_json", cache_key)
+                if cached is not None:
+                    return schema.model_validate(cached)
+            except Exception as exc:  # cache must never break the call path
+                logger.debug("LLM cache lookup skipped: %s", exc)
+                cache = None
+
         for attempt in range(2):
             try:
                 prompt = user
@@ -170,7 +200,14 @@ class OpenAILLMService:
 
                 text = response.choices[0].message.content or ""
                 data = json.loads(text)
-                return schema.model_validate(data)
+                validated = schema.model_validate(data)
+                # Cache only successful parses (never the empty fallback).
+                if cache is not None:
+                    try:
+                        cache.set("llm_json", cache_key, validated.model_dump(mode="json"))
+                    except Exception as exc:  # noqa: BLE001
+                        logger.debug("LLM cache store skipped: %s", exc)
+                return validated
             except (json.JSONDecodeError, ValidationError, Exception) as exc:
                 logger.warning("LLM JSON attempt %d failed: %s", attempt + 1, exc)
                 if attempt == 1:

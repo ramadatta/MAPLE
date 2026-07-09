@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -14,11 +15,13 @@ def enrich_with_fulltext(papers: list, max_papers: int = 20) -> None:
     """
     Try to get PMC full text for papers. Modifies papers in place by setting full_text.
 
-    Strategy:
+    Strategy (per paper):
     1. For papers with a known PMCID, use NCBIPMCService.full_text_for_pmcid (same NCBI host).
     2. For papers without PMCID, use EuropePMCService.full_text_for_pmid (looks up PMCID first).
+    3. Paywalled / not-in-PMC: try an open preprint copy by DOI, then title.
 
-    Only processes up to max_papers to stay within rate limits.
+    The top ``max_papers`` papers lacking full text are fetched CONCURRENTLY in a
+    bounded thread pool (was previously one blocking HTTP request at a time).
     """
     from services.ncbi_pmc_service import NCBIPMCService
     from services.fulltext_service import EuropePMCService
@@ -31,13 +34,20 @@ def enrich_with_fulltext(papers: list, max_papers: int = 20) -> None:
         from services.preprint_service import PreprintService
         preprint_service = PreprintService()
 
-    processed = 0
+    # Top-ranked papers that still need full text.
+    candidates = []
     for paper in papers:
-        if processed >= max_papers:
-            break
         if paper.full_text:
-            continue  # already enriched
+            continue
+        candidates.append(paper)
+        if len(candidates) >= max_papers:
+            break
 
+    if not candidates:
+        logger.debug("Full-text enrichment: nothing to fetch")
+        return
+
+    def _fetch(paper) -> str:
         full_text = ""
         try:
             if paper.pmcid:
@@ -49,7 +59,6 @@ def enrich_with_fulltext(papers: list, max_papers: int = 20) -> None:
         except Exception as exc:
             logger.debug("Full-text fetch failed for PMID %s: %s", paper.pmid, exc)
 
-        # Paywalled / not-in-PMC: try an open preprint copy by DOI, then title.
         if not full_text and preprint_service is not None:
             try:
                 if getattr(paper, "doi", None):
@@ -58,9 +67,21 @@ def enrich_with_fulltext(papers: list, max_papers: int = 20) -> None:
                     full_text = preprint_service.full_text_by_title(paper.title)
             except Exception as exc:
                 logger.debug("Preprint full-text fallback failed for %s: %s", paper.pmid, exc)
+        return full_text or ""
 
-        if full_text:
-            paper.full_text = full_text
-            processed += 1
+    processed = 0
+    max_workers = max(1, min(len(candidates), cfg.FULLTEXT_FETCH_CONCURRENCY))
+    with ThreadPoolExecutor(max_workers=max_workers) as pool:
+        future_map = {pool.submit(_fetch, paper): paper for paper in candidates}
+        for future in as_completed(future_map):
+            paper = future_map[future]
+            try:
+                full_text = future.result()
+            except Exception as exc:
+                logger.debug("Full-text worker error for PMID %s: %s", paper.pmid, exc)
+                full_text = ""
+            if full_text:
+                paper.full_text = full_text
+                processed += 1
 
     logger.debug("Enriched %d papers with full text (limit=%d)", processed, max_papers)

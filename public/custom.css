@@ -560,6 +560,7 @@ hr,
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.02em;
+  white-space: nowrap;   /* never break "Direct assignment" into two lines */
 }
 
 .maple-badge-high,
@@ -1313,7 +1314,51 @@ table.dataTable thead th {
 }
 
 .maple-table-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
   margin: 0 0 10px;
+}
+
+.maple-table-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--maple-text-soft);
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.maple-table-toggle input {
+  accent-color: var(--maple-accent);
+  cursor: pointer;
+}
+
+.maple-table-csv {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: 1px solid var(--maple-border-strong);
+  border-radius: 10px;
+  background: var(--maple-surface-solid);
+  color: var(--maple-accent);
+  font-family: var(--maple-font);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.maple-table-csv:hover {
+  border-color: var(--maple-accent);
+  background: var(--maple-accent-soft);
 }
 
 .maple-table-filter {
@@ -1386,6 +1431,31 @@ table.dataTable thead th {
   margin-left: auto;
   font-size: 12px;
   color: var(--maple-text-muted);
+}
+
+.maple-table-pagesize-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--maple-text-muted);
+  white-space: nowrap;
+}
+
+.maple-table-pagesize {
+  padding: 5px 8px;
+  border: 1px solid var(--maple-border-strong);
+  border-radius: 8px;
+  background: var(--maple-surface-solid);
+  color: var(--maple-text);
+  font-family: var(--maple-font);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.maple-table-pagesize:focus {
+  outline: none;
+  border-color: var(--maple-accent);
 }
 
 @media (max-width: 720px) {
@@ -1480,16 +1550,19 @@ button[aria-label*="light mode" i],
 
 .maple-credit strong { color: var(--maple-text-soft); font-weight: 600; }
 
-/* Evidence table: break out of the narrow message column to full window width.
-   Full-bleed trick — works regardless of Chainlit's wrapper class names, as long
-   as the message column is centered (it is). */
+/* Evidence table: fill the full width of the (already wide) message column.
+   NOTE: the old viewport full-bleed trick (left:50%; margin-left:-47vw) is
+   removed — it assumed the column was centered on the viewport, which is false
+   whenever the sidebar is open, so the table's left columns slid under the
+   sidebar with no way to scroll to them. The message column is already capped
+   at --maple-content-max (up to 1680px), which is plenty wide. */
 .maple-wide-block {
   position: relative;
-  left: 50%;
-  width: 94vw;
-  max-width: 94vw;
-  margin-left: -47vw;
-  margin-right: -47vw;
+  left: auto;
+  width: 100%;
+  max-width: 100%;
+  margin-left: 0;
+  margin-right: 0;
 }
 
 /* Make sure no ancestor clips the wider block. */
@@ -1502,14 +1575,34 @@ button[aria-label*="light mode" i],
   max-width: none !important;
 }
 
+/* Real horizontal + vertical scroll region. The table keeps a min-width so
+   columns never crush into an unreadable sliver; when the viewport is narrower
+   than that, this wrapper produces a genuine scrollbar. */
 .maple-table-scroll {
   width: 100%;
-  overflow-x: auto;               /* safety on very narrow screens only */
+  max-height: 72vh;
+  overflow: auto;
+  overscroll-behavior: contain;
+  border-radius: var(--maple-radius-sm);
 }
 
 .maple-evidence-table {
   table-layout: fixed;
   width: 100% !important;
+  min-width: 1400px;              /* below this, .maple-table-scroll scrolls */
+  /* IMPORTANT: override the generic `table { overflow:hidden }` rule. An
+     overflow:hidden element between a sticky <th> and its scroll container
+     silently disables position:sticky — this is why the header didn't stay. */
+  overflow: visible !important;
+}
+
+/* Sticky header — stays fixed while scrolling rows inside .maple-table-scroll. */
+.maple-evidence-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: var(--maple-surface-2);   /* opaque so rows don't show through */
+  box-shadow: inset 0 -1px 0 var(--maple-border-strong), 0 2px 6px rgba(31, 30, 29, 0.06);
 }
 
 .maple-evidence-table td {
@@ -1519,12 +1612,13 @@ button[aria-label*="light mode" i],
   vertical-align: top;
 }
 
-/* Headers wrap only at spaces (never letter-by-letter like "G E N E S"). */
+/* Headers stay on a single line — horizontal scroll handles width, so there is
+   no need to wrap "Strength" or "# Genes" into ugly stacks. */
 .maple-evidence-table th {
-  white-space: normal !important;
+  white-space: nowrap !important;
   word-break: normal !important;
   overflow-wrap: normal !important;
-  vertical-align: top;
+  vertical-align: middle;
 }
 
 .maple-source-passage {

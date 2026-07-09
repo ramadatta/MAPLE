@@ -294,9 +294,10 @@ def _build_simple_queries(analysis_input: AnalysisInput, papers_per_gene: int = 
     Build PubMed queries from marker genes.
 
     Default (discovery mode): gene-only queries across the literature.
-    Optional: tissue/disease filters when MAPLE_USE_USER_CONTEXT=true.
+    Contextual mode (tissue/disease-focused queries) activates automatically when
+    the user supplies context, or globally when MAPLE_USE_USER_CONTEXT=true.
     """
-    if cfg.USE_USER_CONTEXT:
+    if cfg.USE_USER_CONTEXT or analysis_input.has_context:
         return _build_contextual_queries(analysis_input)
     return _build_discovery_queries(analysis_input)
 

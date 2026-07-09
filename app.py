@@ -19,11 +19,14 @@ if str(_PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(_PROJECT_ROOT))
 
 # ── Logging ──────────────────────────────────────────────────────────────────
+# Level is configurable via MAPLE_LOG_LEVEL (default INFO). DEBUG everywhere is
+# noisy and slows the pipeline in production; set MAPLE_LOG_LEVEL=DEBUG to trace.
+_LOG_LEVEL = getattr(logging, os.getenv("MAPLE_LOG_LEVEL", "INFO").upper(), logging.INFO)
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(_LOG_LEVEL)
 for _ns in ("maple", "agents", "services", "utils", "models"):
-    logging.getLogger(_ns).setLevel(logging.DEBUG)
+    logging.getLogger(_ns).setLevel(_LOG_LEVEL)
 
 load_dotenv(_PROJECT_ROOT / ".env")
 
@@ -187,8 +190,6 @@ async def _run_pipeline(analysis_input: AnalysisInput) -> None:
             if ok:
                 llm = _create_llm(api_key)
         else:
-            if _env_token_only() and is_blablador_config():
-                await cl.Message(content="Using Blablador token from `.env`.").send()
             llm = _create_llm(api_key)
 
     # 3 — Progress tracking
@@ -203,7 +204,7 @@ async def _run_pipeline(analysis_input: AnalysisInput) -> None:
     context_note = _context_note(analysis_input)
     if context_note:
         status_lines.append(
-            f"Optional context noted ({context_note}) — not used to filter retrieval by default."
+            f"Focusing the search on your context ({context_note})."
         )
     status_lines.append("This may take 1–3 minutes…")
     await cl.Message(content="\n\n".join(status_lines)).send()
@@ -375,10 +376,13 @@ async def on_message(message: cl.Message) -> None:
         await cl.Message(
             content=(
                 "Please provide **marker genes** to search the literature.\n\n"
-                "**Example:** `TP63, CDH2, CDKN1A, CDKN2A, KRT17, VIM`\n\n"
-                "**Example:** `COL1A1, COL3A1, POSTN, DCN`\n\n"
-                "MAPLE uses markers only — no tissue or disease context is required. "
-                "Optional context fields are parsed but not used for retrieval by default.\n\n"
+                "**Paste them in any format** — comma, tab, or one per line, or a "
+                "Python/R list:\n"
+                "- `TP63, CDH2, CDKN1A, KRT17, VIM`\n"
+                "- `[\"COL1A1\", \"COL3A1\", \"POSTN\", \"DCN\"]`\n\n"
+                "**Optional context** to focus the search — just say it naturally:\n"
+                "- `COL1A1, COL3A1, POSTN, DCN — focus on lung, IPF`\n\n"
+                "Context is optional; without it MAPLE searches all of PubMed.\n\n"
                 "⚠️ Research use only — not a clinical or diagnostic tool."
             )
         ).send()

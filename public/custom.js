@@ -155,20 +155,27 @@
       container.dataset.mapleTableInit = "1";
 
       var allRows = Array.prototype.slice.call(tbody.querySelectorAll("tr"));
-      var pageSize = parseInt(container.dataset.pageSize || "20", 10);
-      var state = {
-        sortKey: container.dataset.defaultSort || "genes",
-        sortDir: container.dataset.defaultDirection || "desc",
-        page: 1,
-        filter: "",
-      };
 
       var filterInput = container.querySelector(".maple-table-filter");
+      var multiGeneInput = container.querySelector(".maple-table-multigene");
+      var pageSizeSelect = container.querySelector(".maple-table-pagesize");
       var prevBtn = container.querySelector(".maple-table-prev");
       var nextBtn = container.querySelector(".maple-table-next");
       var pageEl = container.querySelector(".maple-table-page");
       var pagesEl = container.querySelector(".maple-table-pages");
       var countEl = container.querySelector(".maple-table-count");
+
+      var initialPageSize = pageSizeSelect
+        ? parseInt(pageSizeSelect.value, 10)
+        : parseInt(container.dataset.pageSize || "10", 10);
+      var state = {
+        sortKey: container.dataset.defaultSort || "genes",
+        sortDir: container.dataset.defaultDirection || "desc",
+        filter: "",
+        multiGene: multiGeneInput ? multiGeneInput.checked : false,
+        page: 1,
+        pageSize: initialPageSize || 10,   // -1 means "All"
+      };
       var headers = container.querySelectorAll("th[data-sort-key]");
 
       function sortValue(tr, key) {
@@ -180,11 +187,19 @@
       }
 
       function matchingRows() {
-        if (!state.filter) return allRows.slice();
-        var q = state.filter.toLowerCase();
-        return allRows.filter(function (tr) {
-          return tr.textContent.toLowerCase().indexOf(q) !== -1;
-        });
+        var rows = allRows.slice();
+        if (state.multiGene) {
+          rows = rows.filter(function (tr) {
+            return (parseFloat(tr.getAttribute("data-genes")) || 0) >= 2;
+          });
+        }
+        if (state.filter) {
+          var q = state.filter.toLowerCase();
+          rows = rows.filter(function (tr) {
+            return tr.textContent.toLowerCase().indexOf(q) !== -1;
+          });
+        }
+        return rows;
       }
 
       function updateHeaders() {
@@ -192,6 +207,9 @@
           th.classList.remove("maple-sort-asc", "maple-sort-desc");
           if (th.dataset.sortKey === state.sortKey) {
             th.classList.add(state.sortDir === "asc" ? "maple-sort-asc" : "maple-sort-desc");
+            th.setAttribute("aria-sort", state.sortDir === "asc" ? "ascending" : "descending");
+          } else {
+            th.setAttribute("aria-sort", "none");
           }
         });
       }
@@ -205,17 +223,21 @@
           return state.sortDir === "asc" ? cmp : -cmp;
         });
 
-        var total = filtered.length;
-        var totalPages = Math.max(1, Math.ceil(total / pageSize));
-        if (state.page > totalPages) state.page = totalPages;
-        if (state.page < 1) state.page = 1;
-
+        // Re-order the DOM to match the current sort.
         filtered.forEach(function (tr) {
           tbody.appendChild(tr);
         });
 
+        var total = filtered.length;
+        var showAll = state.pageSize === -1;
+        var pageSize = showAll ? (total || 1) : state.pageSize;
+        var totalPages = Math.max(1, Math.ceil(total / pageSize));
+        if (state.page > totalPages) state.page = totalPages;
+        if (state.page < 1) state.page = 1;
+
         var start = (state.page - 1) * pageSize;
         var end = start + pageSize;
+
         allRows.forEach(function (tr) {
           tr.style.display = "none";
         });
@@ -255,6 +277,22 @@
         });
       }
 
+      if (multiGeneInput) {
+        multiGeneInput.addEventListener("change", function () {
+          state.multiGene = multiGeneInput.checked;
+          state.page = 1;
+          render();
+        });
+      }
+
+      if (pageSizeSelect) {
+        pageSizeSelect.addEventListener("change", function () {
+          state.pageSize = parseInt(pageSizeSelect.value, 10) || 10;
+          state.page = 1;
+          render();
+        });
+      }
+
       if (prevBtn) {
         prevBtn.addEventListener("click", function () {
           if (state.page > 1) {
@@ -268,6 +306,14 @@
         nextBtn.addEventListener("click", function () {
           state.page += 1;
           render();
+        });
+      }
+
+      var csvBtn = container.querySelector(".maple-table-csv");
+      if (csvBtn) {
+        csvBtn.addEventListener("click", function () {
+          // Reuse the server-side full-fidelity CSV export (chat command).
+          fillComposer("download csv");
         });
       }
 

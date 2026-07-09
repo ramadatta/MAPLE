@@ -1,18 +1,24 @@
 """Runtime configuration for MAPLE."""
 import os
 
-PAPERS_PER_GENE = int(os.getenv("MAPLE_PAPERS_PER_GENE", "5"))
-MAX_EVIDENCE_PAPERS = int(os.getenv("MAPLE_MAX_EVIDENCE_PAPERS", "60"))
+PAPERS_PER_GENE = int(os.getenv("MAPLE_PAPERS_PER_GENE", "10"))
+MAX_EVIDENCE_PAPERS = int(os.getenv("MAPLE_MAX_EVIDENCE_PAPERS", "150"))
 ENABLE_FULLTEXT = os.getenv("MAPLE_ENABLE_FULLTEXT", "true").lower() not in ("0", "false", "no")
 ENABLE_FULLTEXT_DISCOVERY = os.getenv("MAPLE_ENABLE_FULLTEXT_DISCOVERY", "true").lower() not in (
     "0", "false", "no"
 )
 FULLTEXT_DISCOVERY_MAX_PAPERS = int(os.getenv("MAPLE_FULLTEXT_DISCOVERY_MAX_PAPERS", "12"))
 ENABLE_LLM_EXTRACTION = os.getenv("MAPLE_ENABLE_LLM_EXTRACTION", "true").lower() not in ("0", "false", "no")
-LLM_EXTRACTION_MAX_PAPERS = int(os.getenv("MAPLE_LLM_EXTRACTION_MAX_PAPERS", "20"))
+LLM_EXTRACTION_MAX_PAPERS = int(os.getenv("MAPLE_LLM_EXTRACTION_MAX_PAPERS", "25"))
+# Per-paper LLM extraction calls run concurrently in a bounded thread pool.
+# This is the single biggest latency lever (was fully serial). Raise if your
+# LLM provider tolerates more parallel requests; lower if you hit rate limits.
+EVIDENCE_EXTRACTION_CONCURRENCY = int(os.getenv("MAPLE_EVIDENCE_EXTRACTION_CONCURRENCY", "12"))
+# Full-text fetches (PMC/EPMC/preprint) also run concurrently.
+FULLTEXT_FETCH_CONCURRENCY = int(os.getenv("MAPLE_FULLTEXT_FETCH_CONCURRENCY", "12"))
 # Characters of PMC full text handed to the LLM extractor per paper.
 LLM_FULLTEXT_CHARS = int(os.getenv("MAPLE_LLM_FULLTEXT_CHARS", "14000"))
-TABLE_PAGE_SIZE = int(os.getenv("MAPLE_TABLE_PAGE_SIZE", "20"))
+TABLE_PAGE_SIZE = int(os.getenv("MAPLE_TABLE_PAGE_SIZE", "25"))
 
 # --- Preprint (bioRxiv/medRxiv) full-text source ---
 ENABLE_PREPRINTS = os.getenv("MAPLE_ENABLE_PREPRINTS", "true").lower() not in ("0", "false", "no")

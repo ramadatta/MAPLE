@@ -15,7 +15,9 @@ Never import marker_agent.py or marker_rules.json.
 from __future__ import annotations
 
 import logging
+import os
 import re
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Optional
 
 from maple.models import (
@@ -196,6 +198,12 @@ def _llm_extract(
         )
         normalized = (raw.normalized_label or label).strip().lower()
 
+        def _clean_ctx(val: str) -> Optional[str]:
+            v = (val or "").strip()
+            if not v or v.lower() in {"n/a", "na", "none", "not stated", "unknown", "unspecified"}:
+                return None
+            return v[:80]
+
         rows.append(
             EvidenceRow(
                 pmid=paper.pmid,
@@ -218,6 +226,9 @@ def _llm_extract(
                     f"LLM ({evidence_type}): {len(valid_genes)} gene(s) with '{label}'"
                 ),
                 context_match=context,
+                tissue=_clean_ctx(getattr(raw, "tissue", "")),
+                disease=_clean_ctx(getattr(raw, "disease", "")),
+                species=_clean_ctx(getattr(raw, "species", "")),
                 source_url=paper.source_url,
             )
         )
@@ -272,10 +283,12 @@ def run_evidence_agent(
             abstract_only_papers=sum(1 for p in papers if not p.full_text),
         )
 
-    for paper in papers:
-        if not paper.full_text:
-            abstract_only += 1
+    abstract_only = sum(1 for p in papers if not p.full_text)
 
+    # ── Pass 1: select papers eligible for an LLM call (genes present, in budget) ──
+    eligible: list[RetrievedPaper] = []
+    eligible_found: list[list[str]] = []
+    for paper in papers:
         found_genes = _find_user_genes_in_text(user_genes, _paper_text(paper))
         if not found_genes:
             excluded_count += 1
@@ -283,27 +296,44 @@ def run_evidence_agent(
                 f"PMID {paper.pmid}: no user-provided genes found in title/abstract/full_text"
             )
             continue
-
-        if llm_used >= llm_budget:
+        if len(eligible) >= llm_budget:
             excluded_count += 1
             excluded_reasons.append(
                 f"PMID {paper.pmid}: genes found but LLM budget "
                 f"({llm_budget} papers) exhausted"
             )
             continue
+        eligible.append(paper)
+        eligible_found.append(found_genes)
 
-        try:
-            paper_rows = _llm_extract(paper, user_genes, analysis_input, llm)
-        except Exception as exc:
-            logger.warning("LLM extraction error for PMID %s: %s", paper.pmid, exc)
-            paper_rows = []
-        llm_used += 1
+    # ── Pass 2: run per-paper extraction concurrently (bounded thread pool) ──────
+    results: dict[int, list[EvidenceRow]] = {}
+    if eligible:
+        max_workers = max(1, min(len(eligible), cfg.EVIDENCE_EXTRACTION_CONCURRENCY))
+        with ThreadPoolExecutor(max_workers=max_workers) as pool:
+            future_map = {
+                pool.submit(_llm_extract, paper, user_genes, analysis_input, llm): idx
+                for idx, paper in enumerate(eligible)
+            }
+            for future in as_completed(future_map):
+                idx = future_map[future]
+                try:
+                    results[idx] = future.result()
+                except Exception as exc:
+                    logger.warning(
+                        "LLM extraction error for PMID %s: %s", eligible[idx].pmid, exc
+                    )
+                    results[idx] = []
+    llm_used = len(eligible)
 
+    # ── Pass 3: aggregate in stable paper order ──────────────────────────────────
+    for idx, paper in enumerate(eligible):
+        paper_rows = results.get(idx, [])
         if not paper_rows:
             papers_no_assignment += 1
             excluded_count += 1
             excluded_reasons.append(
-                f"PMID {paper.pmid}: genes found ({', '.join(found_genes)}) "
+                f"PMID {paper.pmid}: genes found ({', '.join(eligible_found[idx])}) "
                 "but the model found no explicit cell-type assignment"
             )
             continue

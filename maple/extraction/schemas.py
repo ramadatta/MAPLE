@@ -14,6 +14,10 @@ class _LLMEvidenceRow(BaseModel):
     evidence_type: str = "direct_marker_celltype_assignment"
     match_strength: str = "Low"
     evidence_section: str = "unknown"
+    # Biological context of the cell type AS STATED in this paper ("" if not stated).
+    tissue: str = ""
+    disease: str = ""
+    species: str = ""
 
 
 class _LLMEvidenceOutput(BaseModel):

@@ -20,6 +20,14 @@ class AnalysisInput(BaseModel):
             raise ValueError("markers must not be empty — provide at least one gene symbol")
         return v
 
+    @property
+    def has_context(self) -> bool:
+        """True when the user supplied tissue/disease/species to focus retrieval."""
+        return any(
+            (v or "").strip()
+            for v in (self.tissue, self.disease, self.species)
+        )
+
 # --- Retrieval ---
 
 class RetrievedPaper(BaseModel):

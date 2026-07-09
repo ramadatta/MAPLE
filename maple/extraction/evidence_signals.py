@@ -190,7 +190,7 @@ def _genes_near_celltype(text_lower: str, genes: list[str], celltype_terms: list
 
 
 def _context_phrase_hits(text_lower: str, analysis_input: AnalysisInput | None) -> list[str]:
-    if not cfg.USE_USER_CONTEXT or not analysis_input:
+    if not analysis_input or not (cfg.USE_USER_CONTEXT or analysis_input.has_context):
         return []
     hits: list[str] = []
     for val in (analysis_input.tissue, analysis_input.disease, analysis_input.species):
