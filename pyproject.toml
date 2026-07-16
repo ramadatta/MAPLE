@@ -39,6 +39,22 @@ dev = [
     "pytest>=7.0.0",
     "pytest-cov>=3.0.0",
 ]
+# Single-cell integration (Scanpy/AnnData workflows).
+scanpy = [
+    "anndata>=0.8",
+    "scanpy>=1.9",
+]
+# Report export (Excel / HTML).
+reports = [
+    "openpyxl>=3.0",
+    "jinja2>=3.0",
+]
+all = [
+    "anndata>=0.8",
+    "scanpy>=1.9",
+    "openpyxl>=3.0",
+    "jinja2>=3.0",
+]
 
 [project.urls]
 Homepage = "https://github.com/fabianlab/maple"
@@ -46,8 +62,10 @@ Documentation = "https://github.com/fabianlab/maple/blob/main/README.md"
 Repository = "https://github.com/fabianlab/maple"
 Issues = "https://github.com/fabianlab/maple/issues"
 
-[tool.setuptools]
-packages = ["celltype_annotator"]
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["maple*", "services*", "utils*", "agents*", "models*", "scripts*"]
+exclude = ["tests*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

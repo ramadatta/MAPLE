@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run unit tests (offline)
+        # Deterministic, network-free tests. Live-retrieval tests that hit
+        # PubMed/NCBI are excluded here to keep CI fast and non-flaky.
+        run: |
+          pytest -q \
+            tests/test_api.py \
+            tests/test_gene_parser.py \
+            tests/test_input_parser.py \
+            tests/test_bulk_input_parser.py \
+            tests/test_models.py \
+            tests/test_table.py \
+            tests/test_ui_components.py \
+            tests/test_markdown_safe.py \
+            tests/test_evidence_signals.py \
+            tests/test_evidence_agent.py \
+            tests/test_candidate_agent.py \
+            tests/test_consensus_agent.py \
+            tests/test_validators.py \
+            tests/test_scoring.py \
+            tests/test_at2_markers.py \
+            tests/test_llm_provider.py

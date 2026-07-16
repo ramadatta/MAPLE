@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import logging
 import os
+import threading
 import time
 import xml.etree.ElementTree as ET
 
@@ -21,21 +22,30 @@ logger = logging.getLogger(__name__)
 NCBI_EUTILS_BASE = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils"
 NCBI_FETCH_URL = f"{NCBI_EUTILS_BASE}/efetch.fcgi"
 REQUEST_TIMEOUT = 15
-RATE_LIMIT_SECONDS = 0.1
+# NCBI allows ~3 req/sec anonymously, ~10 req/sec with an API key. Spacing is
+# enforced under a shared lock so concurrent full-text fetches don't burst past it.
+RATE_LIMIT_WITH_KEY = 0.11
+RATE_LIMIT_NO_KEY = 0.35
 
 
 class NCBIPMCService:
-    """Fetch open-access full text from NCBI PMC by PMCID (no auth, same host as PubMed)."""
+    """Fetch open-access full text from NCBI PMC by PMCID (uses NCBI_API_KEY if set)."""
+
+    _lock = threading.Lock()
+    _last_request = 0.0
 
     def __init__(self):
         self.cache = get_cache()
-        self._last_request = 0.0
+        self.api_key = os.getenv("NCBI_API_KEY", "").strip()
 
     def _rate_limit(self) -> None:
-        elapsed = time.time() - self._last_request
-        if elapsed < RATE_LIMIT_SECONDS:
-            time.sleep(RATE_LIMIT_SECONDS - elapsed)
-        self._last_request = time.time()
+        # Class-level lock + timestamp so ALL instances/threads share one throttle.
+        delay = RATE_LIMIT_WITH_KEY if self.api_key else RATE_LIMIT_NO_KEY
+        with NCBIPMCService._lock:
+            elapsed = time.time() - NCBIPMCService._last_request
+            if elapsed < delay:
+                time.sleep(delay - elapsed)
+            NCBIPMCService._last_request = time.time()
 
     def _get(self, url: str, params: dict | None = None) -> requests.Response | None:
         self._rate_limit()
@@ -68,6 +78,8 @@ class NCBIPMCService:
             "tool": os.getenv("NCBI_TOOL", "maple"),
             "email": os.getenv("NCBI_EMAIL", "maple@example.com"),
         }
+        if self.api_key:
+            params["api_key"] = self.api_key
         resp = self._get(NCBI_FETCH_URL, params)
         if resp is None or not resp.text:
             logger.debug("NCBI PMC: no response for PMC%s", pmc_id)

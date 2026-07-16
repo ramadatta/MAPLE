@@ -92,6 +92,52 @@ TP63, CDH2, CDKN1A, CDKN2A, KRT17, VIM
 COL1A1, COL3A1, POSTN, DCN
 ```
 
+## Programmatic use (Python API)
+
+MAPLE can be called directly from a script or notebook — no UI required. The LLM
+client is built automatically from your environment (`OPENAI_API_KEY` /
+`GITLAB_TOKEN`); without a key it runs in degraded mode (retrieval only).
+
+```python
+from maple import annotate
+
+result = annotate(
+    markers=["COL1A1", "COL3A1", "POSTN", "CTHRC1"],
+    tissue="lung",
+    disease="idiopathic pulmonary fibrosis",
+    species="human",
+)
+
+print(result.label, result.confidence)          # e.g. "fibroblast" High
+for row in result.evidence:
+    print(row.number_of_user_genes_found, row.celltype_label, row.pmid)
+
+print(result.run_metadata.model)                 # provenance for reproducibility
+result.to_json()                                 # stable, serializable output
+```
+
+Annotate many marker sets (e.g. one per cluster) in one call — failures are
+isolated per group:
+
+```python
+from maple import annotate_marker_sets
+
+results = annotate_marker_sets(
+    {
+        "0": ["COL1A1", "DCN", "LUM"],
+        "1": ["SFTPC", "ABCA3", "SFTPA1"],
+    },
+    tissue="lung",
+    species="human",
+)
+for cluster, res in results.items():
+    print(cluster, "->", res.label, res.confidence)
+```
+
+In async contexts (FastAPI, notebooks) use the coroutine forms
+`annotate_async(...)` / `annotate_marker_sets_async(...)`. A Scanpy/`AnnData`
+adapter (`annotate_clusters(adata, groupby=...)`) is planned next.
+
 ## Deploy (free, public)
 
 MAPLE ships with a Hugging Face Spaces–ready Docker setup. See **[DEPLOY_HF.md](DEPLOY_HF.md)**

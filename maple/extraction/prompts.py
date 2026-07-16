@@ -1,6 +1,10 @@
 """LLM prompt templates for MAPLE evidence extraction and consensus."""
 from __future__ import annotations
 
+# Bump when prompt wording/schema-shaping changes. Recorded in run provenance so
+# results are traceable to the exact prompt version that produced them.
+PROMPT_VERSION = "1.0"
+
 # ---- Evidence Extraction Prompt ----
 
 EVIDENCE_EXTRACTION_SYSTEM = (
