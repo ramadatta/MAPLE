@@ -1,5 +1,5 @@
 """Pre-built AnalysisState fixtures for tests."""
-from maple.models import (
+from maples.models import (
     AnalysisInput, AnalysisState, RetrievalResult, RetrievedPaper,
     ExtractionResult, EvidenceRow, ContextMatchDetail,
     CandidateResult, CandidateLabel, DevilsAdvocateResult,

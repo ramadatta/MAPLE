@@ -1,7 +1,7 @@
 """Tests that models validate correctly."""
 import pytest
 from pydantic import ValidationError
-from maple.models import AnalysisInput, EvidenceRow, ConsensusResult
+from maples.models import AnalysisInput, EvidenceRow, ConsensusResult
 
 
 def test_analysis_input_requires_markers():

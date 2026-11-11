@@ -1,6 +1,6 @@
 """Tests for maple/input_parser.py — all without network calls."""
 import pytest
-from maple.input_parser import parse_user_message
+from maples.input_parser import parse_user_message
 
 
 def test_simple_gene_list():

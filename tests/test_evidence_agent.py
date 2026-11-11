@@ -1,8 +1,8 @@
 """Tests for the LLM-first evidence extractor (mock LLM, no network)."""
 import pytest
-from maple.models import AnalysisInput, RetrievalResult, RetrievedPaper
-from maple.runtime.evidence_agent import run_evidence_agent
-from maple.extraction.schemas import _LLMEvidenceOutput, _LLMEvidenceRow
+from maples.models import AnalysisInput, RetrievalResult, RetrievedPaper
+from maples.runtime.evidence_agent import run_evidence_agent
+from maples.extraction.schemas import _LLMEvidenceOutput, _LLMEvidenceRow
 
 
 def _make_paper(pmid, title, abstract, full_text=None, pmcid=None):
@@ -198,7 +198,7 @@ def test_gene_not_in_quote_is_dropped_but_row_kept():
 
 def test_no_marker_rules_in_evidence_agent():
     """Evidence agent must not import marker_agent or load marker_rules.json."""
-    import maple.runtime.evidence_agent as mod
+    import maples.runtime.evidence_agent as mod
     import inspect
     import re
     source = inspect.getsource(mod)
@@ -209,7 +209,7 @@ def test_no_marker_rules_in_evidence_agent():
 
 def test_discovery_queries_have_no_hardcoded_tissue_terms():
     """Generic discovery queries only — no lung/IPF/basaloid/AT0/vascular priors."""
-    from maple.literature.pubmed import _build_simple_queries
+    from maples.literature.pubmed import _build_simple_queries
 
     inp = AnalysisInput(markers=["TP63", "CDH2", "CDKN1A", "CDKN2A", "KRT17", "VIM"])
     queries = _build_simple_queries(inp)
@@ -224,8 +224,8 @@ def test_discovery_queries_have_no_hardcoded_tissue_terms():
 
 def test_fulltext_discovery_adds_paper_before_abstract_ranking(monkeypatch):
     """OA full-text discovery still retrieves body-text evidence via gene queries."""
-    from models.schemas import PubMedPaper
-    from maple.literature import pubmed as pubmed_mod
+    from maples.services.schemas import PubMedPaper
+    from maples.literature import pubmed as pubmed_mod
 
     body_text = "TP63 and KRT17 mark a distinct epithelial population in this study."
 
@@ -258,9 +258,9 @@ def test_fulltext_discovery_adds_paper_before_abstract_ranking(monkeypatch):
             assert pmcid == "PMC7439502"
             return body_text
 
-    import services.pubmed_service as pubmed_service_mod
-    import services.fulltext_service as fulltext_service_mod
-    import services.ncbi_pmc_service as ncbi_pmc_service_mod
+    import maples.services.pubmed_service as pubmed_service_mod
+    import maples.services.fulltext_service as fulltext_service_mod
+    import maples.services.ncbi_pmc_service as ncbi_pmc_service_mod
 
     monkeypatch.setattr(pubmed_service_mod, "PubMedService", EmptyPubMedService)
     monkeypatch.setattr(fulltext_service_mod, "EuropePMCService", FakeEuropePMCService)
@@ -279,8 +279,8 @@ def test_fulltext_discovery_adds_paper_before_abstract_ranking(monkeypatch):
 
 def test_fulltext_discovery_updates_existing_pubmed_record(monkeypatch):
     """If PubMed finds metadata first, full-text discovery must enrich it in place."""
-    from models.schemas import PubMedPaper
-    from maple.literature import pubmed as pubmed_mod
+    from maples.services.schemas import PubMedPaper
+    from maples.literature import pubmed as pubmed_mod
 
     body_text = "TP63 and KRT17 mark a distinct epithelial population in this study."
     paper = PubMedPaper(
@@ -308,9 +308,9 @@ def test_fulltext_discovery_updates_existing_pubmed_record(monkeypatch):
         def full_text_for_pmcid(self, pmcid):
             return body_text
 
-    import services.pubmed_service as pubmed_service_mod
-    import services.fulltext_service as fulltext_service_mod
-    import services.ncbi_pmc_service as ncbi_pmc_service_mod
+    import maples.services.pubmed_service as pubmed_service_mod
+    import maples.services.fulltext_service as fulltext_service_mod
+    import maples.services.ncbi_pmc_service as ncbi_pmc_service_mod
 
     monkeypatch.setattr(pubmed_service_mod, "PubMedService", PubMedWithMetadata)
     monkeypatch.setattr(fulltext_service_mod, "EuropePMCService", FakeEuropePMCService)

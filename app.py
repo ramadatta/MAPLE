@@ -31,24 +31,24 @@ for _ns in ("maple", "agents", "services", "utils", "models"):
 load_dotenv(_PROJECT_ROOT / ".env")
 
 # ── Core imports ─────────────────────────────────────────────────────────────
-from maple.models import AnalysisInput, AnalysisState
-from maple.runtime.orchestrator import run_maple_pipeline
-from maple.input_parser import parse_user_message
-from maple.ui.audit_trail import render_audit_trail_html
-from maple.ui.components import render_consensus_panel_html, render_devils_advocate_html
-from maple.ui.table import render_evidence_table_html, to_csv
-from services.llm_service import (
+from maples.models import AnalysisInput, AnalysisState
+from maples.runtime.orchestrator import run_maple_pipeline
+from maples.input_parser import parse_user_message
+from maples.ui.audit_trail import render_audit_trail_html
+from maples.ui.components import render_consensus_panel_html, render_devils_advocate_html
+from maples.ui.table import render_evidence_table_html, to_csv
+from maples.services.llm_service import (
     create_llm_service,
     detect_llm_provider,
     is_blablador_config,
     llm_provider_label,
 )
-from utils.ui_components import welcome_hero
-from utils.progress_tracker import PipelineProgress
-from utils.markdown_safe import markdown_cell
+from maples.utils.ui_components import welcome_hero
+from maples.utils.progress_tracker import PipelineProgress
+from maples.utils.markdown_safe import markdown_cell
 
 try:
-    from services.gitlab_llm_service import GitLabLLMService
+    from maples.services.gitlab_llm_service import GitLabLLMService
     _HAS_GITLAB = True
 except ImportError:
     _HAS_GITLAB = False

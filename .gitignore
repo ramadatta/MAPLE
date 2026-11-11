@@ -27,3 +27,8 @@ maple_evidence*.csv
 # NOTE: .chainlit/config.toml and .chainlit/translations/ ARE committed
 # (they carry the theme, name, layout and are needed at deploy time).
 maple.txt
+
+# Packaging build output
+*.egg-info/
+build/
+dist/

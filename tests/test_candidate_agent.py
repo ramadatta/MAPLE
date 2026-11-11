@@ -1,7 +1,7 @@
 """Tests for the candidate grouping logic — no network or LLM calls."""
 import pytest
-from maple.models import AnalysisInput, ExtractionResult, EvidenceRow, ContextMatchDetail
-from maple.runtime.candidate_agent import run_candidate_agent
+from maples.models import AnalysisInput, ExtractionResult, EvidenceRow, ContextMatchDetail
+from maples.runtime.candidate_agent import run_candidate_agent
 
 
 def _make_extraction(rows):

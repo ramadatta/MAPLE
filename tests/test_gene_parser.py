@@ -1,6 +1,6 @@
 """Tests for gene parsing utilities."""
 
-from utils.gene_parser import parse_genes
+from maples.utils.gene_parser import parse_genes
 
 
 def test_parse_mixed_separators():

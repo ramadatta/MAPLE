@@ -1,18 +1,18 @@
 [build-system]
-requires = ["setuptools>=45", "wheel"]
+requires = ["setuptools>=61", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "maple"
-version = "0.2.0-beta"
-description = "MAPLE — Marker-based Annotation with PubMed Literature Evidence: accurate cell-type annotation from marker genes"
+name = "maples"
+version = "0.3.0.dev0"
+description = "MAPLES — Mapping Analogous Programs from Literature Evidence across Species, organs and diseases"
 readme = "README.md"
 requires-python = ">=3.9"
 license = { text = "MIT" }
 authors = [
-    { name = "MAPLE Contributors" }
+    { name = "Sai Rama Sridatta Prakki" }
 ]
-keywords = ["single-cell", "annotation", "cell-type", "pubmed", "markers", "transcriptomics"]
+keywords = ["single-cell", "marker genes", "cell type", "literature mining", "pubmed", "transcriptomics"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Science/Research",
@@ -21,59 +21,51 @@ classifiers = [
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Topic :: Scientific/Engineering :: Bio-Informatics",
 ]
 
+# Core: the pipeline, Python API, CLI and the local browser app (`maples ui`).
 dependencies = [
-    "chainlit>=1.0.0",
-    "openai>=1.0.0",
-    "pydantic>=2.0.0",
-    "pandas>=1.3.0",
-    "python-dotenv>=0.19.0",
-    "requests>=2.25.0",
+    "openai>=1.0,<3",
+    "pydantic>=2.0,<3",
+    "pandas>=1.3",
+    "python-dotenv>=0.19",
+    "requests>=2.25",
     "diskcache>=5.2.1",
+    "fastapi>=0.100",
+    "uvicorn>=0.23",
 ]
 
 [project.optional-dependencies]
-dev = [
-    "pytest>=7.0.0",
-    "pytest-cov>=3.0.0",
-]
-# Single-cell integration (Scanpy/AnnData workflows).
-scanpy = [
-    "anndata>=0.8",
-    "scanpy>=1.9",
-]
-# Report export (Excel / HTML).
-reports = [
-    "openpyxl>=3.0",
-    "jinja2>=3.0",
-]
-all = [
-    "anndata>=0.8",
-    "scanpy>=1.9",
-    "openpyxl>=3.0",
-    "jinja2>=3.0",
-]
+# Google Scholar finder via Smithery MCP (off by default).
+scholar = ["mcp>=1.0"]
+# The older Chainlit chat app (app.py), used by the Hugging Face demo.
+demo = ["chainlit>=1.0"]
+# Single-cell integration (Scanpy/AnnData workflows) — planned.
+scanpy = ["anndata>=0.8", "scanpy>=1.9"]
+dev = ["pytest>=7.0", "pytest-cov>=3.0", "httpx>=0.24"]
+all = ["mcp>=1.0", "chainlit>=1.0", "anndata>=0.8", "scanpy>=1.9"]
+
+[project.scripts]
+maples = "maples.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/fabianlab/maple"
-Documentation = "https://github.com/fabianlab/maple/blob/main/README.md"
-Repository = "https://github.com/fabianlab/maple"
-Issues = "https://github.com/fabianlab/maple/issues"
+Homepage = "https://huggingface.co/spaces/ramadatta88/MAPLE"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["maple*", "services*", "utils*", "agents*", "models*", "scripts*"]
-exclude = ["tests*"]
+include = ["maples*"]
+
+[tool.setuptools.package-data]
+"maples.web" = ["static/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
-addopts = "--strict-markers -v"
-timeout = 300
+addopts = "--strict-markers"
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
     "integration: marks tests as integration tests",

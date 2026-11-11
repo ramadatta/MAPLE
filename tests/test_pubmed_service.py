@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from services.pubmed_service import EUtilitiesBackend
+from maples.services.pubmed_service import EUtilitiesBackend
 
 
 @pytest.fixture
@@ -103,7 +103,7 @@ class TestEUtilitiesBackendBasics:
 
     def test_clamping_score(self):
         """Test score clamping utility."""
-        from utils.scoring import clamp_score
+        from maples.utils.scoring import clamp_score
 
         assert clamp_score(0.5) == 0.5
         assert clamp_score(-0.5) == 0.0

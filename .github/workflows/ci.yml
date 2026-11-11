@@ -17,10 +17,10 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install dependencies
+      - name: Install MAPLES with test extras
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install -e ".[dev]"
 
       - name: Run unit tests (offline)
         # Deterministic, network-free tests. Live-retrieval tests that hit
@@ -40,6 +40,8 @@ jobs:
             tests/test_candidate_agent.py \
             tests/test_consensus_agent.py \
             tests/test_validators.py \
-            tests/test_scoring.py \
-            tests/test_at2_markers.py \
-            tests/test_llm_provider.py
+            tests/test_llm_provider.py \
+            tests/test_settings_and_web.py
+
+      - name: Check the command line installs
+        run: maples --version

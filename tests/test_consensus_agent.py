@@ -5,8 +5,8 @@ from tests.fixtures.sample_state import (
     make_at2_state,
     make_weak_evidence_state,
 )
-from maple.models import AnalysisInput, CandidateLabel, CandidateResult, DevilsAdvocateResult, ExtractionResult
-from maple.runtime.consensus_agent import run_consensus_agent
+from maples.models import AnalysisInput, CandidateLabel, CandidateResult, DevilsAdvocateResult, ExtractionResult
+from maples.runtime.consensus_agent import run_consensus_agent
 
 
 def test_fibroblast_consensus_is_medium_or_high():
@@ -42,7 +42,7 @@ def test_consensus_label_comes_from_evidence():
 
 def test_no_marker_rules_in_consensus():
     """Verify consensus_agent does not import marker_agent or load marker_rules.json."""
-    import maple.runtime.consensus_agent as mod
+    import maples.runtime.consensus_agent as mod
     import inspect
     import re
     source = inspect.getsource(mod)

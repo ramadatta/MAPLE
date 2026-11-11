@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import pytest
 
-from maple.extraction.evidence_signals import (
+from maples.extraction.evidence_signals import (
     EMITTABLE_EVIDENCE_TYPES,
     classify_evidence_type,
     is_broad_label_text,
@@ -11,8 +11,8 @@ from maple.extraction.evidence_signals import (
     paper_rank_score,
     score_evidence_chunk,
 )
-from maple.models import AnalysisInput, RetrievedPaper
-from maple.extraction.validators import validate_label_in_snippet, validate_snippet_in_text
+from maples.models import AnalysisInput, RetrievedPaper
+from maples.extraction.validators import validate_label_in_snippet, validate_snippet_in_text
 
 
 def test_direct_marker_celltype_assignment():

@@ -1,10 +1,10 @@
+# Dependencies for the Chainlit demo (app.py) used by the Hugging Face Space.
+# For the local app and Python API, install the package instead: pip install -e .
 chainlit
 openai
 pydantic
 pandas
 python-dotenv
 requests
-biopython
 diskcache
 mcp
-pytest

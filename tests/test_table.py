@@ -1,10 +1,10 @@
 """Tests for evidence table rendering and pagination."""
 import pytest
 from tests.fixtures.sample_state import make_fibrosis_fibroblast_state
-from maple.ui.table import (
+from maples.ui.table import (
     get_filtered_rows, get_sorted_rows, get_page, to_csv, render_evidence_table_html,
 )
-from maple.models import TableState, EvidenceRow
+from maples.models import TableState, EvidenceRow
 
 
 def test_pagination():

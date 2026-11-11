@@ -17,8 +17,8 @@ from pathlib import Path
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from maple.models import AnalysisInput
-from maple.runtime.orchestrator import run_maple_pipeline
+from maples.models import AnalysisInput
+from maples.runtime.orchestrator import run_maple_pipeline
 
 EVAL_CASES = {
     "fibroblast": AnalysisInput(
@@ -114,7 +114,7 @@ async def main():
         if not api_key:
             print("ERROR: --llm requires OPENAI_API_KEY or GITLAB_TOKEN in environment")
             sys.exit(1)
-        from services.llm_service import create_llm_service
+        from maples.services.llm_service import create_llm_service
         llm = create_llm_service(api_key)
         print("LLM mode enabled")
     else:

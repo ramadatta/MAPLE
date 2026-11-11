@@ -1,10 +1,10 @@
 """Tests for Scholar (Smithery) + preprint discovery — no network, no mcp import."""
 import pytest
 
-from maple.models import AnalysisInput, RetrievedPaper
-from models.schemas import PubMedPaper
-from services.scholar_service import ScholarService, normalize_scholar_results
-from services.preprint_service import PreprintService, _titles_match
+from maples.models import AnalysisInput, RetrievedPaper
+from maples.services.schemas import PubMedPaper
+from maples.services.scholar_service import ScholarService, normalize_scholar_results
+from maples.services.preprint_service import PreprintService, _titles_match
 
 
 # --- Scholar result normalization -------------------------------------------
@@ -118,7 +118,7 @@ def test_full_text_for_doi_parses_jats(monkeypatch):
 # --- Scholar discovery wiring ------------------------------------------------
 
 def test_scholar_discovery_adds_fulltext_paper(monkeypatch):
-    from maple.literature import pubmed as pubmed_mod
+    from maples.literature import pubmed as pubmed_mod
 
     class FakeScholar:
         def __init__(self, *a, **k):
@@ -145,10 +145,10 @@ def test_scholar_discovery_adds_fulltext_paper(monkeypatch):
         def full_text_for_doi(self, doi):
             return "VWA1+/PLVAP+ ectopic ECs express COL4A1 and COL4A2 in lung fibrosis."
 
-    import services.scholar_service as scholar_mod
-    import services.fulltext_service as fulltext_mod
-    import services.ncbi_pmc_service as ncbi_mod
-    import services.preprint_service as preprint_mod
+    import maples.services.scholar_service as scholar_mod
+    import maples.services.fulltext_service as fulltext_mod
+    import maples.services.ncbi_pmc_service as ncbi_mod
+    import maples.services.preprint_service as preprint_mod
 
     monkeypatch.setattr(scholar_mod, "ScholarService", FakeScholar)
     monkeypatch.setattr(fulltext_mod, "EuropePMCService", FakeEPMC)
@@ -166,7 +166,7 @@ def test_scholar_discovery_adds_fulltext_paper(monkeypatch):
 
 
 def test_openalex_parses_work_ids_and_abstract(monkeypatch):
-    from services.openalex_service import OpenAlexService, _reconstruct_abstract
+    from maples.services.openalex_service import OpenAlexService, _reconstruct_abstract
 
     assert _reconstruct_abstract({"VWA1": [0], "and": [1], "PLVAP": [2]}) == "VWA1 and PLVAP"
 
@@ -191,7 +191,7 @@ def test_openalex_parses_work_ids_and_abstract(monkeypatch):
 
 
 def test_openalex_discovery_adds_preprint_fulltext(monkeypatch):
-    from maple.literature import pubmed as pubmed_mod
+    from maples.literature import pubmed as pubmed_mod
 
     class FakeOpenAlex:
         def __init__(self, *a, **k):
@@ -216,10 +216,10 @@ def test_openalex_discovery_adds_preprint_fulltext(monkeypatch):
         def full_text_by_title(self, title):
             return "VWA1+/PLVAP+ ectopic ECs express COL4A1 and COL4A2."
 
-    import services.openalex_service as oa_mod
-    import services.fulltext_service as ft_mod
-    import services.ncbi_pmc_service as ncbi_mod
-    import services.preprint_service as pp_mod
+    import maples.services.openalex_service as oa_mod
+    import maples.services.fulltext_service as ft_mod
+    import maples.services.ncbi_pmc_service as ncbi_mod
+    import maples.services.preprint_service as pp_mod
 
     monkeypatch.setattr(oa_mod, "OpenAlexService", FakeOpenAlex)
     monkeypatch.setattr(ft_mod, "EuropePMCService", FakeEPMC)
@@ -237,7 +237,7 @@ def test_openalex_discovery_adds_preprint_fulltext(monkeypatch):
 
 
 def test_openalex_skips_already_retrieved(monkeypatch):
-    from maple.literature import pubmed as pubmed_mod
+    from maples.literature import pubmed as pubmed_mod
 
     class FakeOpenAlex:
         def __init__(self, *a, **k):
@@ -246,7 +246,7 @@ def test_openalex_skips_already_retrieved(monkeypatch):
         def search_fulltext(self, query, max_results):
             return [PubMedPaper(pmid="999", title="Already have it", doi="10.1/x")]
 
-    import services.openalex_service as oa_mod
+    import maples.services.openalex_service as oa_mod
     monkeypatch.setattr(oa_mod, "OpenAlexService", FakeOpenAlex)
     monkeypatch.setattr(pubmed_mod.cfg, "ENABLE_OPENALEX", True)
 
@@ -258,7 +258,7 @@ def test_openalex_skips_already_retrieved(monkeypatch):
 
 
 def test_scholar_discovery_disabled_by_flag(monkeypatch):
-    from maple.literature import pubmed as pubmed_mod
+    from maples.literature import pubmed as pubmed_mod
     monkeypatch.setattr(pubmed_mod.cfg, "ENABLE_SCHOLAR", False)
     papers: list[RetrievedPaper] = []
     added = pubmed_mod._add_scholar_discovery_papers(

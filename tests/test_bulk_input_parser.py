@@ -1,6 +1,6 @@
 """Tests for bulk annotation input parsing."""
 
-from utils.bulk_input_parser import parse_annotation_input
+from maples.utils.bulk_input_parser import parse_annotation_input
 
 
 USER_EXAMPLE = """Marker genes:

@@ -1,6 +1,6 @@
 """Tests for Chainlit markdown sanitization."""
 
-from utils.markdown_safe import markdown_cell, sanitize_markdown_for_chainlit
+from maples.utils.markdown_safe import markdown_cell, sanitize_markdown_for_chainlit
 
 
 def test_sanitize_strips_markdown_images():

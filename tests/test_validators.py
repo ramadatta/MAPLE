@@ -1,5 +1,5 @@
 """Tests for evidence validation helpers."""
-from maple.extraction.validators import (
+from maples.extraction.validators import (
     validate_label_in_snippet,
     validate_genes_in_snippet,
 )

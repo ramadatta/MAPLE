@@ -1,0 +1,416 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MAPLES</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%230E7A6B'/%3E%3Ctext x='16' y='22' font-size='16' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='700'%3EM%3C/text%3E%3C/svg%3E">
+<style>
+/* Runs offline: system fonts only, nothing loaded from the internet. */
+:root{
+  --bg:#F2F5F4; --surface:#FFFFFF; --sunken:#E8EEEC; --ink:#15211E; --muted:#5A6B66; --line:#D3DDDA;
+  --home:#0E7A6B; --near:#B97C0C; --far:#5753C4; --gap:#C2364C; --ok:#1B7F3B; --mark:#FCE9A8; --markink:#3A2A00; --on:#FFFFFF;
+  --f-body:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --f-mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#0E1412; --surface:#151D1B; --sunken:#1C2623; --ink:#E4ECE9; --muted:#93A5A0; --line:#2A3633;
+  --home:#3CC2AE; --near:#E5B54C; --far:#9F9BF4; --gap:#F27389; --ok:#5BD07E; --mark:#5A4A12; --markink:#FFF1C2; --on:#0E1412; color-scheme:dark}}
+*{box-sizing:border-box}
+html,body{margin:0}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font:14px/1.5 var(--f-body)}
+.wrap{max-width:1380px;margin:0 auto;padding:18px 20px 48px;display:grid;gap:16px}
+h1,h2,h3{margin:0;text-wrap:balance}
+header{display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:center}
+.brand h1{font-size:26px;letter-spacing:-.01em}
+.brand p{margin:0;color:var(--muted);font-size:13px}
+.hright{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:4px 10px}
+.chip i{width:8px;height:8px;border-radius:50%;background:var(--c,var(--muted))}
+.btn{font:inherit;font-weight:600;font-size:13.5px;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;padding:7px 14px;cursor:pointer}
+.btn:hover{background:var(--sunken)}
+.btn.primary{background:var(--home);border-color:var(--home);color:var(--on)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.btn.link{border:0;background:none;padding:4px 6px;color:var(--home)}
+:focus-visible{outline:2px solid var(--far);outline-offset:2px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;min-width:0}
+.lab{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600;margin-bottom:4px}
+textarea,input,select{font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%}
+textarea{font-family:var(--f-mono);font-size:13px;min-height:84px;resize:vertical}
+.form{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:16px}
+@media (max-width:820px){.form{grid-template-columns:minmax(0,1fr)}}
+.field3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+@media (max-width:520px){.field3{grid-template-columns:minmax(0,1fr)}}
+.hint{color:var(--muted);font-size:12.5px;margin:6px 0 0}
+.actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px}
+.err{color:var(--gap);font-size:13px}
+.progress ol{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:6px}
+.progress li{display:flex;gap:10px;align-items:center;color:var(--muted)}
+.progress li.now{color:var(--ink);font-weight:600}
+.progress li.done{color:var(--ink)}
+.dotst{width:18px;height:18px;border-radius:50%;border:2px solid var(--line);flex:none;display:grid;place-items:center;font-size:11px}
+li.done .dotst{background:var(--ok);border-color:var(--ok);color:var(--on)}
+li.now .dotst{border-color:var(--home);border-top-color:transparent;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.phead{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:baseline}
+.phead .t{font-variant-numeric:tabular-nums;color:var(--muted);font-size:13px}
+.work{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:16px;align-items:start}
+@media (max-width:1000px){.work{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;min-width:0}
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);padding:6px 8px 0;overflow-x:auto}
+.tab{font:inherit;font-weight:600;font-size:13.5px;color:var(--muted);background:none;border:0;border-bottom:2px solid transparent;padding:8px 12px;cursor:pointer;white-space:nowrap}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--ink)}
+.tab[disabled]{cursor:default;opacity:.45}
+.tab small{font-weight:500;font-size:10.5px;margin-left:4px}
+.view{padding:16px}
+.verdict{display:flex;flex-wrap:wrap;gap:10px;align-items:baseline}
+.verdict h2{font-size:24px}
+.pill{display:inline-block;font-size:12px;font-weight:600;padding:2px 9px;border-radius:999px;border:1px solid var(--c);color:var(--c);white-space:nowrap}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:14px 0}
+.stat{background:var(--sunken);border-radius:10px;padding:10px 12px}
+.stat b{font-size:20px;font-variant-numeric:tabular-nums;display:block}
+.stat span{color:var(--muted);font-size:12.5px}
+.sec{margin-top:16px;display:grid;gap:6px}
+.sec h3{font-size:14px}
+.sec p{margin:0;max-width:80ch}
+.genes{display:flex;flex-wrap:wrap;gap:4px}
+.genes code{font-family:var(--f-mono);font-size:12px;background:var(--sunken);padding:1px 6px;border-radius:4px}
+.alts{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.alts li{border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+.warn{border:1px dashed var(--gap);border-radius:8px;padding:8px 10px;font-size:13px}
+.tbar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;align-items:center}
+.tbar input{flex:1;min-width:180px;width:auto}
+.tbar select{width:auto}
+.gfilter{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px}
+.gbtn{font-family:var(--f-mono);font-size:12px;border:1px solid var(--line);background:var(--sunken);color:var(--ink);padding:2px 8px;border-radius:999px;cursor:pointer}
+.gbtn[aria-pressed="true"]{background:var(--home);border-color:var(--home);color:var(--on)}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{text-align:left;padding:8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600;white-space:nowrap}
+tbody tr{cursor:pointer}
+tbody tr:hover,tbody tr.sel{background:var(--sunken)}
+td.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.drawer{position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto;padding:16px;display:grid;gap:12px}
+@media (max-width:1000px){.drawer{position:static;max-height:none}}
+.eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:600}
+.drawer h2{font-size:18px}
+blockquote{margin:0;font-size:14px;line-height:1.6;border-left:4px solid var(--home);padding:4px 0 4px 12px}
+mark{background:var(--mark);color:var(--markink);padding:0 2px;border-radius:3px;font-family:var(--f-mono);font-size:.92em}
+dl{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 12px;margin:0;font-size:13px}
+dt{color:var(--muted)}
+dd{margin:0;min-width:0;overflow-wrap:anywhere}
+a{color:var(--home)}
+.empty{color:var(--muted);text-align:center;padding:24px}
+dialog{border:1px solid var(--line);border-radius:14px;background:var(--surface);color:var(--ink);padding:0;width:min(560px,calc(100vw - 32px))}
+dialog::backdrop{background:rgba(0,0,0,.35)}
+.dlg{padding:20px;display:grid;gap:12px}
+.dlg .row{display:grid;gap:4px}
+.dlg .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:520px){.dlg .two{grid-template-columns:1fr}}
+.msg{font-size:13px;min-height:1.2em}
+.msg.ok{color:var(--ok)} .msg.bad{color:var(--gap)}
+.foot{color:var(--muted);font-size:12px;text-align:center}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <h1>MAPLES</h1>
+      <p>Mapping Analogous Programs from Literature Evidence across Species, organs and diseases</p>
+    </div>
+    <div class="hright">
+      <span class="chip" id="aichip"><i></i><span>Checking settings…</span></span>
+      <button class="btn" id="openSettings">Settings</button>
+    </div>
+  </header>
+
+  <section class="card" aria-label="New analysis">
+    <form id="runForm" class="form" autocomplete="off">
+      <div>
+        <label class="lab" for="genes">Your genes</label>
+        <textarea id="genes" placeholder="TP63, KRT17, KRT5, CDKN2A, CDKN1A, LAMB3, LAMC2, VIM, MMP7, SOX4" required></textarea>
+        <p class="hint">Paste symbols separated by commas, spaces or new lines.</p>
+      </div>
+      <div>
+        <span class="lab">Your field (optional)</span>
+        <div class="field3">
+          <input id="tissue" placeholder="Organ, e.g. lung" aria-label="Organ or tissue">
+          <input id="disease" placeholder="Disease, e.g. IPF" aria-label="Disease">
+          <select id="species" aria-label="Species"><option value="">Any species</option><option>Human</option><option>Mouse</option><option>Other</option></select>
+        </div>
+        <p class="hint">Tells MAPLES what counts as your own field.</p>
+        <div class="actions">
+          <button class="btn primary" id="runBtn" type="submit">Run</button>
+          <button class="btn link" id="example" type="button">Use an example</button>
+          <span class="err" id="formErr" role="alert"></span>
+        </div>
+      </div>
+    </form>
+  </section>
+
+  <section class="card progress" id="progress" hidden aria-live="polite">
+    <div class="phead"><h3 id="ptitle">Running</h3><span class="t" id="ptime"></span></div>
+    <ol id="pstages"></ol>
+    <p class="hint" id="pdetail"></p>
+  </section>
+
+  <div class="work" id="results" hidden>
+    <main class="panel">
+      <div class="tabs" role="tablist">
+        <button class="tab" role="tab" data-view="summary" aria-selected="true">Summary</button>
+        <button class="tab" role="tab" data-view="table" aria-selected="false">Evidence table</button>
+        <button class="tab" disabled title="Coming in the next step">Field map<small>soon</small></button>
+        <button class="tab" disabled title="Coming in the next step">Gene × field<small>soon</small></button>
+        <button class="tab" disabled title="Coming in the next step">Body map<small>soon</small></button>
+        <button class="tab" disabled title="Coming in the next step">Timeline<small>soon</small></button>
+      </div>
+      <div class="view" id="view"></div>
+    </main>
+    <aside class="panel drawer" id="drawer" aria-live="polite"></aside>
+  </div>
+
+  <p class="foot">Runs on this computer. Your genes go only to the literature databases and the AI service you chose in Settings. Research use only.</p>
+</div>
+
+<dialog id="settings" aria-labelledby="stitle">
+  <form method="dialog" class="dlg" id="settingsForm" autocomplete="off">
+    <h2 id="stitle">Settings</h2>
+    <div class="row">
+      <label class="lab" for="preset">AI service</label>
+      <select id="preset"></select>
+    </div>
+    <div class="row">
+      <label class="lab" for="apikey">API key</label>
+      <input id="apikey" type="password" placeholder="Paste your key">
+    </div>
+    <div class="two">
+      <div class="row"><label class="lab" for="baseurl">Endpoint URL</label><input id="baseurl" placeholder="Default (OpenAI)"></div>
+      <div class="row"><label class="lab" for="model">Model</label><input id="model" placeholder="e.g. gpt-4.1-mini"></div>
+    </div>
+    <div class="two">
+      <div class="row"><label class="lab" for="ncbiemail">Email for NCBI (recommended)</label><input id="ncbiemail" type="email" placeholder="you@institute.org"></div>
+      <div class="row"><label class="lab" for="ncbikey">NCBI API key (optional)</label><input id="ncbikey" type="password" placeholder="Faster PubMed searches"></div>
+    </div>
+    <p class="hint" id="cfgpath"></p>
+    <p class="msg" id="smsg" role="status"></p>
+    <div class="actions">
+      <button class="btn primary" id="saveSettings" type="button">Save</button>
+      <button class="btn" id="testSettings" type="button">Save and test connection</button>
+      <button class="btn link" value="close" formnovalidate>Close</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const EXAMPLE={genes:'TP63, KRT17, KRT5, CDKN2A, CDKN1A, LAMB3, LAMC2, VIM, MMP7, SOX4',tissue:'lung',disease:'idiopathic pulmonary fibrosis',species:'Human'};
+const ETYPE={direct_marker_celltype_assignment:'Direct marker assignment',cluster_annotation:'Cluster annotation',differential_expression_only:'Differential expression only',gene_mention_only:'Gene mentioned only'};
+const CONFC={High:'var(--ok)',Medium:'var(--near)',Low:'var(--gap)',Insufficient:'var(--muted)'};
+let SET=null, RESULT=null, GENES=[], view='summary', sel=null;
+const T={q:'',genes:new Set(),type:'',sort:'genes'};
+const store={get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+
+async function api(path,opts={}){
+  const r=await fetch(path,{headers:{'Content-Type':'application/json'},...opts});
+  let data=null;try{data=await r.json()}catch(e){}
+  if(!r.ok) throw new Error((data&&data.detail)||`Request failed (${r.status})`);
+  return data;
+}
+
+/* ---------- settings ---------- */
+function presetFor(s){
+  const url=(s.OPENAI_BASE_URL||'').toLowerCase();
+  if(url.includes('blablador'))return 'blablador';
+  if(url.includes('11434'))return 'ollama';
+  if(!url)return 'openai';
+  return 'custom';
+}
+function renderChip(){
+  const c=$('#aichip');
+  if(!SET){c.innerHTML='<i></i><span>Settings unavailable</span>';return}
+  if(SET.has_llm_key){const p=SET.presets[presetFor(SET)];c.style.setProperty('--c','var(--ok)');c.innerHTML=`<i></i><span>${esc(p.label)}${SET.OPENAI_MODEL?' · '+esc(SET.OPENAI_MODEL):''}</span>`}
+  else{c.style.setProperty('--c','var(--gap)');c.innerHTML='<i></i><span>No API key yet</span>'}
+}
+function fillSettings(){
+  const sel=$('#preset');sel.innerHTML=Object.entries(SET.presets).map(([k,p])=>`<option value="${k}">${esc(p.label)}</option>`).join('');
+  sel.value=presetFor(SET);
+  $('#apikey').value='';$('#apikey').placeholder=SET.OPENAI_API_KEY?`Saved (${SET.OPENAI_API_KEY}). Paste to replace.`:'Paste your key';
+  $('#baseurl').value=SET.OPENAI_BASE_URL||'';$('#model').value=SET.OPENAI_MODEL||'';
+  $('#ncbiemail').value=SET.NCBI_EMAIL||'';$('#ncbikey').value='';$('#ncbikey').placeholder=SET.NCBI_API_KEY?`Saved (${SET.NCBI_API_KEY})`:'Faster PubMed searches';
+  $('#cfgpath').textContent=`Saved only on this computer, in ${SET.config_path}`;
+  $('#smsg').textContent='';$('#smsg').className='msg';
+}
+$('#preset').onchange=e=>{const p=SET.presets[e.target.value];$('#baseurl').value=p.base_url;if(p.model||e.target.value!=='custom')$('#model').value=p.model;
+  if(e.target.value==='ollama'&&!SET.OPENAI_API_KEY&&!$('#apikey').value)$('#apikey').value='ollama'};
+async function saveSettings(){
+  const body={OPENAI_BASE_URL:$('#baseurl').value.trim(),OPENAI_MODEL:$('#model').value.trim(),NCBI_EMAIL:$('#ncbiemail').value.trim()};
+  if($('#apikey').value.trim())body.OPENAI_API_KEY=$('#apikey').value.trim();
+  if($('#ncbikey').value.trim())body.NCBI_API_KEY=$('#ncbikey').value.trim();
+  SET=await api('/api/settings',{method:'POST',body:JSON.stringify(body)});
+  renderChip();fillSettings();
+}
+$('#saveSettings').onclick=async()=>{try{await saveSettings();$('#smsg').className='msg ok';$('#smsg').textContent='Saved.'}catch(e){$('#smsg').className='msg bad';$('#smsg').textContent=e.message}};
+$('#testSettings').onclick=async()=>{const m=$('#smsg');try{await saveSettings();m.className='msg';m.textContent='Testing…';
+  const r=await api('/api/settings/test',{method:'POST'});m.className='msg '+(r.ok?'ok':'bad');m.textContent=r.message}catch(e){m.className='msg bad';m.textContent=e.message}};
+$('#openSettings').onclick=()=>{if(SET)fillSettings();$('#settings').showModal()};
+
+/* ---------- run ---------- */
+// The current run lives in the address (#run-<id>) so a reload keeps it.
+function setRunHash(id){try{history.replaceState(null,'','#run-'+id)}catch(e){location.hash='run-'+id}}
+$('#example').onclick=()=>{$('#genes').value=EXAMPLE.genes;$('#tissue').value=EXAMPLE.tissue;$('#disease').value=EXAMPLE.disease;$('#species').value=EXAMPLE.species};
+$('#runForm').onsubmit=async e=>{
+  e.preventDefault();$('#formErr').textContent='';
+  if(SET&&!SET.has_llm_key){$('#formErr').textContent='Add your API key in Settings first.';$('#openSettings').click();return}
+  const body={genes:$('#genes').value,tissue:$('#tissue').value.trim()||null,disease:$('#disease').value.trim()||null,species:$('#species').value||null};
+  store.set('maples:last',body);
+  $('#runBtn').disabled=true;
+  try{const job=await api('/api/run',{method:'POST',body:JSON.stringify(body)});setRunHash(job.id);showProgress(job);poll(job.id)}
+  catch(err){$('#formErr').textContent=err.message;$('#runBtn').disabled=false}
+};
+function showProgress(job){
+  $('#progress').hidden=false;
+  $('#ptitle').textContent=job.status==='error'?'Run failed':job.status==='done'?'Finished':`Analysing ${job.genes.length} genes`;
+  $('#ptime').textContent=`${Math.round(job.elapsed_seconds)} s`;
+  $('#pstages').innerHTML=job.stages.map((s,i)=>{const st=i<job.stage_index?'done':i===job.stage_index&&job.status==='running'?'now':'';
+    return `<li class="${st}"><span class="dotst">${st==='done'?'✓':''}</span>${esc(s)}</li>`}).join('');
+  $('#pdetail').textContent=job.status==='error'?job.error:job.status==='running'?job.detail:'';
+  $('#pdetail').className=job.status==='error'?'hint err':'hint';
+}
+async function poll(id){
+  try{
+    const job=await api('/api/run/'+id);showProgress(job);
+    if(job.status==='running'){setTimeout(()=>poll(id),1000);return}
+    $('#runBtn').disabled=false;
+    if(job.status==='done'){RESULT=job.result;GENES=job.genes;T.genes=new Set();T.q='';T.type='';sel=null;view='summary';renderResults()}
+  }catch(e){$('#formErr').textContent=e.message;$('#runBtn').disabled=false;$('#progress').hidden=true}
+}
+
+/* ---------- results ---------- */
+function hl(text){
+  if(!GENES.length)return esc(text);
+  const re=new RegExp('\\b('+GENES.map(g=>g.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|')+')\\b','gi');
+  return esc(text).replace(re,'<mark>$1</mark>');
+}
+const pubmed=p=>`https://pubmed.ncbi.nlm.nih.gov/${encodeURIComponent(p)}/`;
+function renderResults(){
+  $('#results').hidden=false;
+  document.querySelectorAll('.tab[data-view]').forEach(t=>t.setAttribute('aria-selected',t.dataset.view===view));
+  (view==='summary'?renderSummary:renderTable)();
+  if(!sel)renderDrawerIntro();
+}
+document.querySelectorAll('.tab[data-view]').forEach(t=>t.onclick=()=>{view=t.dataset.view;renderResults()});
+
+function renderSummary(){
+  const r=RESULT,cov=r.coverage||{},ev=r.evidence||[];
+  const pmids=new Set(ev.map(e=>e.pmid));
+  const c=CONFC[r.confidence]||'var(--muted)';
+  $('#view').innerHTML=`
+   <div class="verdict"><h2>${esc(r.label)}</h2><span class="pill" style="--c:${c}">Confidence: ${esc(r.confidence)}</span></div>
+   <div class="stats">
+     <div class="stat"><b>${cov.papers_considered??0}</b><span>papers considered</span></div>
+     <div class="stat"><b>${cov.full_text_papers??0}</b><span>read in full text</span></div>
+     <div class="stat"><b>${pmids.size}</b><span>papers with evidence</span></div>
+     <div class="stat"><b>${ev.length}</b><span>quotes found</span></div>
+   </div>
+   ${r.rationale?`<div class="sec"><h3>Why</h3><p>${esc(r.rationale)}</p></div>`:''}
+   ${r.supporting_genes?.length?`<div class="sec"><h3>Supporting genes</h3><div class="genes">${r.supporting_genes.map(g=>`<code>${esc(g)}</code>`).join('')}</div></div>`:''}
+   ${r.alternatives?.length?`<div class="sec"><h3>Other cell types reported for these genes</h3><ul class="alts">${r.alternatives.map(a=>`<li><b>${esc(a.label)}</b>${a.supporting_genes?.length?` · <span class="genes" style="display:inline-flex">${a.supporting_genes.map(g=>`<code>${esc(g)}</code>`).join('')}</span>`:''}${a.reason_not_selected?`<div class="hint">${esc(a.reason_not_selected)}</div>`:''}</li>`).join('')}</ul></div>`:''}
+   ${r.critique?.summary?`<div class="sec"><h3>Devil's advocate</h3><p>${esc(r.critique.strongest_counterargument||r.critique.summary)}</p></div>`:''}
+   ${r.warnings?.length?`<div class="sec"><h3>Notes</h3>${r.warnings.map(w=>`<div class="warn">${esc(w)}</div>`).join('')}</div>`:''}
+   <div class="actions"><button class="btn" id="toTable">Open evidence table</button><button class="btn" id="dlJson">Download JSON</button><button class="btn" id="dlCsv">Download CSV</button></div>
+   <p class="hint">Run with ${esc(r.run_metadata?.model||'no model')} · MAPLES ${esc(r.run_metadata?.maple_version||'')} · ${esc((r.run_metadata?.retrieved_at||'').slice(0,16).replace('T',' '))} UTC</p>`;
+  $('#toTable').onclick=()=>{view='table';renderResults()};
+  $('#dlJson').onclick=()=>download('maples-result.json',JSON.stringify(RESULT,null,2),'application/json');
+  $('#dlCsv').onclick=()=>download('maples-evidence.csv',toCsv(RESULT.evidence||[]),'text/csv');
+}
+function filtered(){
+  let rows=(RESULT.evidence||[]).map((e,i)=>({...e,_i:i}));
+  if(T.genes.size)rows=rows.filter(e=>[...T.genes].every(g=>e.matched_user_genes.includes(g)));
+  if(T.type)rows=rows.filter(e=>e.evidence_type===T.type);
+  const q=T.q.trim().toLowerCase();
+  if(q)rows=rows.filter(e=>[e.celltype_label,e.paper_title,e.evidence_snippet,e.tissue,e.disease,e.species,e.pmid,e.journal].join(' ').toLowerCase().includes(q));
+  const s={genes:(a,b)=>b.matched_user_genes.length-a.matched_user_genes.length,newest:(a,b)=>(b.publication_year||0)-(a.publication_year||0),oldest:(a,b)=>(a.publication_year||9999)-(b.publication_year||9999),celltype:(a,b)=>a.celltype_label.localeCompare(b.celltype_label)};
+  return rows.sort(s[T.sort]);
+}
+function renderTable(){
+  const ev=RESULT.evidence||[];
+  if(!ev.length){$('#view').innerHTML='<p class="empty">No quotes were found in the papers that were read. Try fewer or more specific genes, or check the notes on the Summary tab.</p>';return}
+  const used=GENES.filter(g=>ev.some(e=>e.matched_user_genes.includes(g)));
+  const types=[...new Set(ev.map(e=>e.evidence_type))];
+  const rows=filtered();
+  $('#view').innerHTML=`
+   <div class="tbar"><input id="q" type="search" placeholder="Search cell types, tissues, diseases, quotes" value="${esc(T.q)}" aria-label="Search">
+    <select id="type" aria-label="Evidence type"><option value="">All evidence types</option>${types.map(t=>`<option value="${t}">${esc(ETYPE[t]||t)}</option>`).join('')}</select>
+    <select id="sort" aria-label="Sort"><option value="genes">Most of your genes</option><option value="newest">Newest first</option><option value="oldest">Oldest first</option><option value="celltype">Cell type A–Z</option></select>
+    <button class="btn" id="dlCsv2">Download CSV</button></div>
+   <div class="gfilter" aria-label="Show rows containing these genes">${used.map(g=>`<button class="gbtn" data-g="${esc(g)}" aria-pressed="${T.genes.has(g)}">${esc(g)}</button>`).join('')}</div>
+   <p class="hint" style="margin:0 0 8px">${rows.length} of ${ev.length} rows. Click a row to read the quote.</p>
+   <div class="scroll"><table><thead><tr><th>Year</th><th>Cell type (as the paper names it)</th><th>Your genes</th><th>Tissue · disease · species</th><th>Evidence</th><th>PMID</th></tr></thead><tbody>
+   ${rows.map(e=>`<tr data-i="${e._i}" tabindex="0" class="${sel===e._i?'sel':''}"><td class="num">${e.publication_year??''}</td><td>${esc(e.celltype_label)}</td>
+     <td><div class="genes">${e.matched_user_genes.map(g=>`<code>${esc(g)}</code>`).join('')}</div></td>
+     <td>${esc([e.tissue,e.disease,e.species].filter(Boolean).join(' · ')||'not stated')}</td>
+     <td>${esc(ETYPE[e.evidence_type]||e.evidence_type)}</td><td class="num">${esc(e.pmid)}</td></tr>`).join('')}
+   </tbody></table></div>`;
+  $('#type').value=T.type;$('#sort').value=T.sort;
+  $('#q').oninput=e=>{T.q=e.target.value;const p=e.target.selectionStart;renderTable();const n=$('#q');n.focus();n.setSelectionRange(p,p)};
+  $('#type').onchange=e=>{T.type=e.target.value;renderTable()};
+  $('#sort').onchange=e=>{T.sort=e.target.value;renderTable()};
+  $('#dlCsv2').onclick=()=>download('maples-evidence.csv',toCsv(rows),'text/csv');
+  document.querySelectorAll('.gbtn').forEach(b=>b.onclick=()=>{const g=b.dataset.g;T.genes.has(g)?T.genes.delete(g):T.genes.add(g);renderTable()});
+  document.querySelectorAll('tbody tr').forEach(tr=>{const open=()=>{sel=+tr.dataset.i;renderTable();renderDrawer(RESULT.evidence[sel])};
+    tr.onclick=open;tr.onkeydown=e=>{if(e.key==='Enter')open()}});
+}
+function renderDrawerIntro(){
+  $('#drawer').innerHTML=`<div><div class="eyebrow">Quotes</div><h2>Click a row to see its quote</h2></div>
+   <p class="hint">Every quote is copied word for word from the paper and checked against its text, so you can find it in the original with Ctrl+F.</p>`;
+}
+function renderDrawer(e){
+  const links=[`<a href="${pubmed(e.pmid)}" target="_blank" rel="noopener">PubMed ${esc(e.pmid)}</a>`];
+  if(e.pmcid)links.push(`<a href="https://pmc.ncbi.nlm.nih.gov/articles/${encodeURIComponent(e.pmcid)}/" target="_blank" rel="noopener">Full text (${esc(e.pmcid)})</a>`);
+  if(e.doi)links.push(`<a href="https://doi.org/${encodeURI(e.doi)}" target="_blank" rel="noopener">DOI</a>`);
+  $('#drawer').innerHTML=`<div><div class="eyebrow">${esc(ETYPE[e.evidence_type]||e.evidence_type)}</div><h2>${esc(e.celltype_label)}</h2></div>
+   <blockquote>${hl(e.evidence_snippet)}</blockquote>
+   <dl>
+    <dt>Paper</dt><dd>${esc(e.paper_title)}</dd>
+    <dt>Journal</dt><dd>${esc([e.journal,e.publication_year].filter(Boolean).join(', ')||'unknown')}</dd>
+    <dt>Your genes</dt><dd><div class="genes">${e.matched_user_genes.map(g=>`<code>${esc(g)}</code>`).join('')}</div></dd>
+    <dt>Tissue</dt><dd>${esc(e.tissue||'not stated')}</dd>
+    <dt>Disease</dt><dd>${esc(e.disease||'not stated')}</dd>
+    <dt>Species</dt><dd>${esc(e.species||'not stated')}</dd>
+    <dt>Found in</dt><dd>${esc(e.evidence_section)}</dd>
+    <dt>Strength</dt><dd>${esc(e.match_strength)}${e.marker_specific?' · presented as specific markers':''}</dd>
+   </dl>
+   <div class="actions">${links.join(' ')}</div>
+   <button class="btn" id="copyQ">Copy quote</button>`;
+  $('#copyQ').onclick=async()=>{try{await navigator.clipboard.writeText(e.evidence_snippet);$('#copyQ').textContent='Copied'}catch(_){$('#copyQ').textContent='Copy failed'}};
+  if(matchMedia('(max-width:1000px)').matches)$('#drawer').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function toCsv(rows){
+  const cols=['pmid','publication_year','celltype_label','matched_user_genes','tissue','disease','species','evidence_type','match_strength','evidence_section','paper_title','journal','doi','pmcid','evidence_snippet'];
+  const q=v=>{v=Array.isArray(v)?v.join('; '):(v??'');v=String(v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
+  return [cols.join(','),...rows.map(r=>cols.map(c=>q(r[c])).join(','))].join('\n');
+}
+function download(name,text,type){
+  const url=URL.createObjectURL(new Blob([text],{type}));const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+
+/* ---------- start ---------- */
+(async()=>{
+  const last=store.get('maples:last');
+  if(last){$('#genes').value=last.genes||'';$('#tissue').value=last.tissue||'';$('#disease').value=last.disease||'';$('#species').value=last.species||''}
+  try{SET=await api('/api/settings')}catch(e){SET=null}
+  renderChip();
+  if(SET&&!SET.has_llm_key){fillSettings();$('#settings').showModal()}
+  const m=location.hash.match(/^#run-([a-f0-9]+)$/);
+  if(m){$('#runBtn').disabled=true;poll(m[1])}
+})();
+</script>
+</body>
+</html>

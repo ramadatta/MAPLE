@@ -1,6 +1,6 @@
 """Tests for MAPLE HTML UI components."""
 
-from utils.ui_components import render_report_html, welcome_hero
+from maples.utils.ui_components import render_report_html, welcome_hero
 
 
 def test_welcome_hero_contains_branding():
@@ -16,7 +16,7 @@ def test_welcome_hero_contains_branding():
 
 
 def test_render_report_html_escapes_user_content():
-    from models.schemas import (
+    from maples.services.schemas import (
         ConsensusResult,
         EvidenceAgentResult,
         FinalReport,

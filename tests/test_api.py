@@ -3,9 +3,9 @@ import asyncio
 
 import pytest
 
-import maple.runtime.orchestrator as orch
-from maple import annotate, annotate_async, annotate_marker_sets, AnnotationResult
-from maple.models import (
+import maples.runtime.orchestrator as orch
+from maples import annotate, annotate_async, annotate_marker_sets, AnnotationResult
+from maples.models import (
     AnalysisInput,
     AnalysisState,
     ConsensusAlternative,
@@ -45,7 +45,7 @@ def _fake_state(markers, tissue=None, disease=None, species=None) -> AnalysisSta
 @pytest.fixture(autouse=True)
 def _no_env_llm(monkeypatch):
     """Never build a real LLM from environment during tests."""
-    monkeypatch.setattr("maple.api._make_llm_from_env", lambda: None)
+    monkeypatch.setattr("maples.api._make_llm_from_env", lambda: None)
 
 
 def _patch_pipeline(monkeypatch, capture=None, raise_for=None):

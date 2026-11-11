@@ -2,7 +2,7 @@
 
 import os
 
-from services.llm_service import detect_llm_provider, is_blablador_config, llm_provider_label
+from maples.services.llm_service import detect_llm_provider, is_blablador_config, llm_provider_label
 
 
 def test_detect_gitlab_token():

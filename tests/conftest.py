@@ -6,3 +6,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
+
+# Keep tests away from the real ~/.maples (settings and cache) of whoever runs them.
+import os
+import tempfile
+
+os.environ.setdefault("MAPLES_HOME", tempfile.mkdtemp(prefix="maples-test-home-"))
