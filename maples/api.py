@@ -33,7 +33,8 @@ from typing import Awaitable, Mapping, Optional, Sequence, TypeVar, Union
 
 from pydantic import BaseModel, Field
 
-from maples.models import AnalysisInput, AnalysisState, ConsensusAlternative, EvidenceRow
+from maples.fields import FieldContext
+from maples.models import AnalysisInput, AnalysisState, ConsensusAlternative, EvidenceRow, LabelGroup
 
 __all__ = [
     "annotate",
@@ -102,6 +103,11 @@ class AnnotationResult(BaseModel):
     supporting_pmids: list[str] = Field(default_factory=list)
     evidence: list[EvidenceRow] = Field(default_factory=list)
     alternatives: list[ConsensusAlternative] = Field(default_factory=list)
+    # The user's own field, normalised (None when no field was given). Each
+    # evidence row carries its own ``field`` and ``ring`` relative to this.
+    home_field: Optional[FieldContext] = None
+    # Different names papers use for the same population ("also called").
+    label_groups: list[LabelGroup] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
     run_metadata: RunMetadata = Field(default_factory=RunMetadata)
     # Full internal pipeline state — only populated when include_raw_state=True.
@@ -203,6 +209,8 @@ def _state_to_result(
         supporting_pmids=list(consensus.main_supporting_pmids) if consensus else [],
         evidence=evidence,
         alternatives=list(consensus.alternative_labels) if consensus else [],
+        home_field=state.home_field,
+        label_groups=list(state.label_groups),
         warnings=warnings,
         run_metadata=meta,
         raw_state=state if include_raw_state else None,

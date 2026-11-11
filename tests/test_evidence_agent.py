@@ -328,3 +328,15 @@ def test_fulltext_discovery_updates_existing_pubmed_record(monkeypatch):
     assert rows[0].pmcid == "PMC7439502"
     assert body_text in rows[0].full_text
     assert any("updated 1" in note for note in result.audit_notes)
+
+
+def test_context_runs_both_field_and_cross_field_searches():
+    from maples.literature.pubmed import _ANY_FIELD_SUFFIX, _build_simple_queries
+
+    with_field = _build_simple_queries(
+        AnalysisInput(markers=["TP63", "KRT17"], tissue="lung", disease="IPF")
+    )
+    texts = [q.query.lower() for q in with_field]
+    assert any("lung" in t for t in texts)                       # field-focused searches
+    cross = [q for q in with_field if q.gene.endswith(_ANY_FIELD_SUFFIX)]
+    assert cross and all("lung" not in q.query.lower() for q in cross)  # own quota, no field filter

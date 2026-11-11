@@ -14,6 +14,8 @@ logger = logging.getLogger(__name__)
 
 # Sentinel bucket prefix (mirrors agents/query_builder.py)
 _DISCOVERY_BUCKET = "__discovery__"
+# Bucket suffix for cross-field queries run alongside field-focused ones.
+_ANY_FIELD_SUFFIX = "@any-field"
 
 _SPECIES_WORDS = frozenset(
     {"human", "mouse", "rat", "murine", "homo", "sapiens", "mus", "other"}
@@ -298,7 +300,19 @@ def _build_simple_queries(analysis_input: AnalysisInput, papers_per_gene: int = 
     the user supplies context, or globally when MAPLE_USE_USER_CONTEXT=true.
     """
     if cfg.USE_USER_CONTEXT or analysis_input.has_context:
-        return _build_contextual_queries(analysis_input)
+        # Two searches: one focused on the user's own field, and one across all
+        # fields. PubMedService fills each gene bucket in priority order until its
+        # quota is met, so the cross-field queries get their own buckets — otherwise
+        # the field-focused queries would use up the quota and other fields would
+        # barely be searched.
+        queries = _build_contextual_queries(analysis_input)
+        seen = {q.query for q in queries}
+        for q in _build_discovery_queries(analysis_input):
+            if q.query in seen:
+                continue
+            seen.add(q.query)
+            queries.append(q.model_copy(update={"gene": f"{q.gene}{_ANY_FIELD_SUFFIX}"}))
+        return queries
     return _build_discovery_queries(analysis_input)
 
 

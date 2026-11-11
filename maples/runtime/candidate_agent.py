@@ -207,11 +207,15 @@ def run_candidate_agent(
             group_rows, total_papers, total_user_genes, spec, analysis_input
         )
 
-        # Choose the most common original label as the display label
+        # Display the shared group name (set by the label agent) when there is one;
+        # otherwise the most common original label.
         original_labels = norm_to_original[norm_label]
         from collections import Counter
-        label_counts = Counter(r.celltype_label for r in group_rows)
-        display_label = label_counts.most_common(1)[0][0]
+        group_names = Counter(r.label_group for r in group_rows if r.label_group)
+        if group_names:
+            display_label = group_names.most_common(1)[0][0]
+        else:
+            display_label = Counter(r.celltype_label for r in group_rows).most_common(1)[0][0]
 
         candidates.append(
             CandidateLabel(

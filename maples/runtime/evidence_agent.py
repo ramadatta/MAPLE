@@ -286,8 +286,7 @@ def run_evidence_agent(
     abstract_only = sum(1 for p in papers if not p.full_text)
 
     # ── Pass 1: select papers eligible for an LLM call (genes present, in budget) ──
-    eligible: list[RetrievedPaper] = []
-    eligible_found: list[list[str]] = []
+    candidates: list[tuple[RetrievedPaper, list[str]]] = []
     for paper in papers:
         found_genes = _find_user_genes_in_text(user_genes, _paper_text(paper))
         if not found_genes:
@@ -296,6 +295,29 @@ def run_evidence_agent(
                 f"PMID {paper.pmid}: no user-provided genes found in title/abstract/full_text"
             )
             continue
+        candidates.append((paper, found_genes))
+
+    # When the user named their own field, alternate between papers that look like
+    # their field and papers from other fields, so neither crowds out the other
+    # within the reading budget. Rank order is kept inside each side.
+    from maples.fields import home_from_input, text_matches_home
+
+    home = home_from_input(analysis_input.tissue, analysis_input.disease, analysis_input.species)
+    if home is not None and len(candidates) > llm_budget:
+        home_side = [c for c in candidates if text_matches_home(f"{c[0].title} {c[0].abstract or ''}", home)]
+        other_side = [c for c in candidates if not any(c is h for h in home_side)]
+        balanced: list[tuple[RetrievedPaper, list[str]]] = []
+        while home_side or other_side:
+            if home_side:
+                balanced.append(home_side.pop(0))
+            if other_side:
+                balanced.append(other_side.pop(0))
+        candidates = balanced
+        audit_notes.append("Reading budget split between your field and other fields")
+
+    eligible: list[RetrievedPaper] = []
+    eligible_found: list[list[str]] = []
+    for paper, found_genes in candidates:
         if len(eligible) >= llm_budget:
             excluded_count += 1
             excluded_reasons.append(

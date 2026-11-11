@@ -3,7 +3,7 @@ from __future__ import annotations
 
 # Bump when prompt wording/schema-shaping changes. Recorded in run provenance so
 # results are traceable to the exact prompt version that produced them.
-PROMPT_VERSION = "1.0"
+PROMPT_VERSION = "1.1"
 
 # ---- Evidence Extraction Prompt ----
 
@@ -93,6 +93,9 @@ User-provided genes: {genes}
 Evidence summary ({n_rows} rows):
 {evidence_summary}
 
+Evidence from other organs, diseases or species is NOT a weakness by itself: MAPLES deliberately \
+looks across fields. Only raise context when it changes what the label means.
+
 Devil's Advocate tasks:
 1. What is the STRONGEST reason this label might be WRONG?
 2. Are any user genes nonspecific housekeeping genes that could appear in any cell type?
@@ -140,4 +143,41 @@ list other reported annotations as alternatives.
 - Provide specific supporting PMIDs from the evidence (not invented).
 
 Return JSON matching ConsensusResult schema.
+"""
+
+# ---- Label grouping prompt ----
+
+LABEL_MERGE_SYSTEM = (
+    "You are a careful cell biologist harmonising cell-type names across papers. "
+    "Merge names only when they clearly refer to the same cell population or state. "
+    "When in doubt, keep names separate."
+)
+
+LABEL_MERGE_USER_TEMPLATE = """\
+Different papers named cell populations associated with the same marker genes.
+Each line is one name, with the user genes the papers attributed to it and a short quote.
+
+{label_lines}
+
+Task: group the numbered names that refer to the SAME cell population or state.
+
+Merge:
+- spelling, punctuation and abbreviation variants (e.g. "AT2 cells" and "alveolar type II cells");
+- different names that papers use for the same population defined by the same markers.
+
+Do NOT merge:
+- a specific subtype with its broader parent type (e.g. "AT2 cells" with "epithelial cells");
+- different populations that share some markers (e.g. "basal cells" and "basaloid cells");
+- names whose markers contradict each other (e.g. "KRT5+ cells" and "KRT5- cells");
+- a name with an extra qualifier (a state, location, function or marker) with the plain name, \
+e.g. "basal cells primed for secretory differentiation" or "dysregulated basal cells" with \
+"basal cells", unless the quotes show they are the same population;
+- names from different organs or tissues (see "field"): the same name in another organ is a \
+separate finding, not a synonym;
+- names from your own background knowledge that are not listed.
+
+Return only groups with two or more members. For each group give "name": copy one of the \
+member names exactly (the clearest one), and "members": the line numbers.
+
+Return JSON: {{"groups": [{{"name": "...", "members": [1, 4]}}]}}
 """

@@ -1,7 +1,9 @@
-"""MAPLE data models."""
+"""MAPLES data models."""
 from __future__ import annotations
 from typing import Optional, Literal
 from pydantic import BaseModel, Field, field_validator
+
+from maples.fields import FieldContext, Ring
 
 # --- Input ---
 
@@ -102,6 +104,12 @@ class EvidenceRow(BaseModel):
     match_reason: str = ""
     context_match: ContextMatchDetail = Field(default_factory=ContextMatchDetail)
     source_url: str = ""
+    # Normalised field of this paper (organ / disease / species) and, when the user
+    # named their own field, where it sits: home / near / far / unplaced.
+    field: FieldContext = Field(default_factory=FieldContext)
+    ring: Optional[Ring] = None
+    # Shared name for cell-type labels that different papers use for the same population.
+    label_group: str = ""
 
 class ExtractionResult(BaseModel):
     evidence_rows: list[EvidenceRow] = Field(default_factory=list)
@@ -188,6 +196,12 @@ class TableState(BaseModel):
     sort_direction: str = "desc"
     search_query: str = ""
 
+class LabelGroup(BaseModel):
+    """Different names that papers use for the same cell population."""
+    name: str
+    members: list[str] = Field(default_factory=list)
+    row_count: int = 0
+
 class AuditEntry(BaseModel):
     agent: str
     message: str
@@ -200,6 +214,8 @@ class AnalysisState(BaseModel):
     candidates: Optional[CandidateResult] = None
     devils_advocate: Optional[DevilsAdvocateResult] = None
     consensus: Optional[ConsensusResult] = None
+    home_field: Optional[FieldContext] = None
+    label_groups: list[LabelGroup] = Field(default_factory=list)
     table_state: TableState = Field(default_factory=TableState)
     audit_trail: list[AuditEntry] = Field(default_factory=list)
     errors: list[str] = Field(default_factory=list)

@@ -134,11 +134,11 @@ def _heuristic_devils_advocate(
         if r.context_match.tissue == "mismatched" or r.context_match.disease == "mismatched"
     )
     if mismatch_count > 0:
+        # Reported for transparency only: evidence from other fields is what MAPLES
+        # looks for, so it never lowers confidence by itself.
         context_mismatches.append(
-            f"{mismatch_count} evidence row(s) have tissue/disease context mismatches."
+            f"{mismatch_count} evidence row(s) come from a different tissue or disease."
         )
-        if adjustment == "keep":
-            adjustment = "lower"
 
     critique = (
         "; ".join(issues)
