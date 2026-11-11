@@ -43,7 +43,8 @@ jobs:
             tests/test_llm_provider.py \
             tests/test_settings_and_web.py \
             tests/test_fields.py \
-            tests/test_label_agent.py
+            tests/test_label_agent.py \
+            tests/test_independence.py
 
       - name: Check the command line installs
         run: maples --version

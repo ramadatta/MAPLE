@@ -111,6 +111,8 @@ class PreprintService:
                     pubmed_url=f"https://doi.org/{doi}",
                     doi=doi,
                     is_open_access=True,
+                    authors=[a.strip() for a in (res.get("authorString", "") or "").rstrip(".").split(",") if a.strip()],
+                    publication_types=["Preprint"],
                 )
             )
         return papers

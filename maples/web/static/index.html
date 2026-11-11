@@ -129,6 +129,10 @@ dialog::backdrop{background:rgba(0,0,0,.35)}
 .groups li{border:1px solid var(--line);border-radius:8px;padding:8px 10px}
 .groups .aka{color:var(--muted);font-size:12.5px}
 td .sub{color:var(--muted);font-size:12px}
+.kind{display:inline-block;font-size:11px;font-weight:600;padding:0 6px;border-radius:4px;border:1px solid var(--c);color:var(--c);margin:2px 4px 0 0}
+.indep{background:var(--sunken);border-radius:10px;padding:10px 12px;font-size:13.5px}
+.indep b{font-variant-numeric:tabular-nums}
+.acc{font-family:var(--f-mono);font-size:12px}
 @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -236,7 +240,7 @@ const EXAMPLE={genes:'TP63, KRT17, KRT5, CDKN2A, CDKN1A, LAMB3, LAMC2, VIM, MMP7
 const ETYPE={direct_marker_celltype_assignment:'Direct marker assignment',cluster_annotation:'Cluster annotation',differential_expression_only:'Differential expression only',gene_mention_only:'Gene mentioned only'};
 const CONFC={High:'var(--ok)',Medium:'var(--near)',Low:'var(--gap)',Insufficient:'var(--muted)'};
 let SET=null, RESULT=null, GENES=[], view='summary', sel=null;
-const T={q:'',genes:new Set(),type:'',sort:'genes',rings:new Set(['home','near','far','unplaced']),system:''};
+const T={q:'',genes:new Set(),type:'',sort:'genes',rings:new Set(['home','near','far','unplaced']),system:'',secondary:true};
 const RINGS={home:{label:'Your field',c:'var(--home)'},near:{label:'Near',c:'var(--near)'},far:{label:'Far',c:'var(--far)'},unplaced:{label:'Not stated',c:'var(--muted)'}};
 const RING_ORDER=['home','near','far','unplaced'];
 let MODE='agnostic';
@@ -244,6 +248,26 @@ const cap=s=>s?s.charAt(0).toUpperCase()+s.slice(1):s;
 const fieldLabel=f=>{if(!f)return 'Not stated';const p=[f.organ?cap(f.organ):null,f.disease_short,f.species].filter(Boolean);return p.length?p.join(' · '):'Not stated'};
 const systemOf=e=>(e.field&&e.field.organ_system)||(e.field&&e.field.organ?'other organ':'not stated');
 const nameOf=e=>e.label_group||e.celltype_label;
+const isPrimary=e=>(e.paper_kind||'primary')==='primary';
+function indep(rows){return{papers:new Set(rows.map(e=>e.pmid)).size,sources:new Set(rows.filter(isPrimary).map(e=>e.source_id||e.pmid)).size,
+  second:new Set(rows.filter(e=>!isPrimary(e)).map(e=>e.pmid)).size}}
+const KIND={review:{label:'Review',c:'var(--muted)'},commentary:{label:'Commentary',c:'var(--muted)'}};
+function kindTags(e){const t=[];if(!isPrimary(e))t.push(`<span class="kind" style="--c:${KIND[e.paper_kind].c}" title="Second-hand: shown but not counted">${KIND[e.paper_kind].label}</span>`);
+  if(e.is_preprint)t.push('<span class="kind" style="--c:var(--near)" title="Not yet peer reviewed">Preprint</span>');
+  if(e.cites&&e.cites.length)t.push('<span class="kind" style="--c:var(--far)" title="The quote cites earlier work">Cites earlier work</span>');return t.join('')}
+function accUrl(a){const u=encodeURIComponent(a);
+  if(/^GSE/.test(a))return `https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=${u}`;
+  if(/^E-[A-Z]{4}-/.test(a))return `https://www.ebi.ac.uk/biostudies/arrayexpress/studies/${u}`;
+  if(/^PRJ/.test(a))return `https://www.ncbi.nlm.nih.gov/bioproject/${u}`;
+  if(/^[SED]RP/.test(a))return `https://www.ncbi.nlm.nih.gov/sra/?term=${u}`;
+  if(/^EGAS/.test(a))return `https://ega-archive.org/studies/${u}`;
+  if(/^EGAD/.test(a))return `https://ega-archive.org/datasets/${u}`;
+  if(/^HRA/.test(a))return `https://ngdc.cncb.ac.cn/gsa-human/browse/${u}`;
+  if(/^CRA/.test(a))return `https://ngdc.cncb.ac.cn/gsa/browse/${u}`;
+  if(/^phs/.test(a))return `https://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi?study_id=${u}`;
+  if(/^syn/.test(a))return `https://www.synapse.org/#!Synapse:${u}`;
+  return null}
+const accLink=a=>{const u=accUrl(a);return u?`<a class="acc" href="${u}" target="_blank" rel="noopener">${esc(a)}</a>`:`<span class="acc">${esc(a)}</span>`};
 const store={get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
 
 async function api(path,opts={}){
@@ -344,8 +368,8 @@ function papersIn(rows){return new Set(rows.map(e=>e.pmid)).size}
 function whereSection(ev){
   if(!ev.length)return '';
   if(MODE==='focused'){
-    return `<div class="sec"><h3>Where the evidence comes from</h3><div class="stats" style="margin:4px 0">${RING_ORDER.map(r=>{const rows=ev.filter(e=>e.ring===r);
-      return `<div class="stat ring" style="--c:${RINGS[r].c}"><b>${papersIn(rows)}</b><span>${r==='home'?'papers in your field':r==='near'?'papers from near fields':r==='far'?'papers from far fields':'papers that do not state their field'}</span></div>`}).join('')}</div>
+    return `<div class="sec"><h3>Where the evidence comes from</h3><div class="stats" style="margin:4px 0">${RING_ORDER.map(r=>{const rows=ev.filter(e=>(e.ring||'unplaced')===r);const i=indep(rows);
+      return `<div class="stat ring" style="--c:${RINGS[r].c}"><b>${i.sources}</b><span>independent source${i.sources===1?'':'s'} ${r==='home'?'in your field':r==='near'?'from near fields':r==='far'?'from far fields':'not stating their field'} (${i.papers} paper${i.papers===1?'':'s'})</span></div>`}).join('')}</div>
       <p class="hint" style="margin:0">Near: same organ (or organ system) with another disease or species. Far: other organs.</p></div>`;
   }
   const by={};ev.forEach(e=>{const k=systemOf(e);(by[k]=by[k]||[]).push(e)});
@@ -353,6 +377,15 @@ function whereSection(ev){
   const nf=new Set(ev.map(e=>fieldLabel(e.field))).size;
   return `<div class="sec"><h3>Where the evidence comes from</h3><p>${nf} different fields across ${top.length} organ systems.</p>
     <div class="stats" style="margin:4px 0">${top.slice(0,4).map(([k,rows])=>`<div class="stat"><b>${papersIn(rows)}</b><span>papers · ${esc(cap(k))}</span></div>`).join('')}</div></div>`;
+}
+function indepSection(ev){
+  if(!ev.length)return '';
+  const i=indep(ev),x=RESULT.independence||{};
+  const parts=[`<b>${i.papers}</b> papers → <b>${i.sources}</b> independent source${i.sources===1?'':'s'}`];
+  if(i.second)parts.push(`${i.second} review${i.second===1?'':'s'} or commentar${i.second===1?'y':'ies'} shown but not counted`);
+  const pre=new Set(ev.filter(e=>e.is_preprint).map(e=>e.pmid)).size;if(pre)parts.push(`${pre} preprint${pre===1?'':'s'} (not yet peer reviewed)`);
+  return `<div class="sec"><h3>How independent is it?</h3><div class="indep">${parts.join(' · ')}</div>
+    <p class="hint" style="margin:0">Papers that share a public dataset${x.datasets?` (${x.datasets} found, e.g. GEO numbers)`:''} or the same last author (lab) count as one source.</p></div>`;
 }
 function groupsSection(){
   const g=(RESULT.label_groups||[]).filter(x=>x.members.length>1);
@@ -372,6 +405,7 @@ function renderSummary(){
      <div class="stat"><b>${pmids.size}</b><span>papers with evidence</span></div>
      <div class="stat"><b>${ev.length}</b><span>quotes found</span></div>
    </div>
+   ${indepSection(ev)}
    ${whereSection(ev)}
    ${groupsSection()}
    ${r.rationale?`<div class="sec"><h3>Why</h3><p>${esc(r.rationale)}</p></div>`:''}
@@ -389,6 +423,7 @@ function filtered(){
   let rows=(RESULT.evidence||[]).map((e,i)=>({...e,_i:i}));
   if(T.genes.size)rows=rows.filter(e=>[...T.genes].every(g=>e.matched_user_genes.includes(g)));
   if(T.type)rows=rows.filter(e=>e.evidence_type===T.type);
+  if(!T.secondary)rows=rows.filter(isPrimary);
   if(MODE==='focused')rows=rows.filter(e=>T.rings.has(e.ring||'unplaced'));
   else if(T.system)rows=rows.filter(e=>systemOf(e)===T.system);
   const q=T.q.trim().toLowerCase();
@@ -407,17 +442,21 @@ function renderTable(){
     <select id="type" aria-label="Evidence type"><option value="">All evidence types</option>${types.map(t=>`<option value="${t}">${esc(ETYPE[t]||t)}</option>`).join('')}</select>
     <select id="sort" aria-label="Sort"><option value="genes">Most of your genes</option><option value="newest">Newest first</option><option value="oldest">Oldest first</option><option value="celltype">Cell type A–Z</option><option value="field">${MODE==='focused'?'Your field first':'By organ system'}</option></select>
     ${MODE==='agnostic'?`<select id="system" aria-label="Organ system"><option value="">All organ systems</option>${[...new Set(ev.map(systemOf))].sort().map(s=>`<option value="${esc(s)}">${esc(cap(s))}</option>`).join('')}</select>`:''}
+    <label class="hint" style="margin:0;display:inline-flex;gap:6px;align-items:center"><input type="checkbox" id="sec2" style="width:auto" ${T.secondary?'checked':''}> Include reviews</label>
     <button class="btn" id="dlCsv2">Download CSV</button></div>
    ${MODE==='focused'?`<div class="gfilter" aria-label="Show fields">${RING_ORDER.map(r=>`<button class="rbtn" data-r="${r}" aria-pressed="${T.rings.has(r)}" style="--c:${RINGS[r].c}"><i></i>${RINGS[r].label} (${ev.filter(e=>(e.ring||'unplaced')===r).length})</button>`).join('')}</div>`:''}
    <div class="gfilter" aria-label="Show rows containing these genes">${used.map(g=>`<button class="gbtn" data-g="${esc(g)}" aria-pressed="${T.genes.has(g)}">${esc(g)}</button>`).join('')}</div>
    <p class="hint" style="margin:0 0 8px">${rows.length} of ${ev.length} rows. Click a row to read the quote.</p>
-   <div class="scroll"><table><thead><tr><th>Year</th><th>Cell type</th><th>Your genes</th><th>Field</th><th>Evidence</th><th>PMID</th></tr></thead><tbody>
+   <div class="scroll"><table><thead><tr><th>Year</th><th>Cell type</th><th>Your genes</th><th>Field</th><th>Evidence</th><th>Dataset</th><th>PMID</th></tr></thead><tbody>
    ${rows.map(e=>`<tr data-i="${e._i}" tabindex="0" class="${sel===e._i?'sel':''}"><td class="num">${e.publication_year??''}</td><td>${esc(nameOf(e))}${e.label_group&&e.label_group!==e.celltype_label?`<div class="sub">Paper says: ${esc(e.celltype_label)}</div>`:''}</td>
      <td><div class="genes">${e.matched_user_genes.map(g=>`<code>${esc(g)}</code>`).join('')}</div></td>
      <td>${MODE==='focused'?`<span class="pill" style="--c:${RINGS[e.ring||'unplaced'].c}">${RINGS[e.ring||'unplaced'].label}</span><br>`:''}${esc(fieldLabel(e.field))}${MODE==='agnostic'?`<div class="sub">${esc(cap(systemOf(e)))}</div>`:''}</td>
-     <td>${esc(ETYPE[e.evidence_type]||e.evidence_type)}</td><td class="num">${esc(e.pmid)}</td></tr>`).join('')}
+     <td>${esc(ETYPE[e.evidence_type]||e.evidence_type)}<div>${kindTags(e)}</div></td>
+     <td>${(e.datasets||[]).length?e.datasets.slice(0,3).map(a=>`<span class="acc">${esc(a)}</span>`).join('<br>')+(e.datasets.length>3?`<div class="sub">+${e.datasets.length-3} more</div>`:''):'<span class="sub">not found</span>'}</td>
+     <td class="num">${esc(e.pmid)}</td></tr>`).join('')}
    </tbody></table></div>`;
   $('#type').value=T.type;$('#sort').value=T.sort;
+  $('#sec2').onchange=e=>{T.secondary=e.target.checked;renderTable()};
   if($('#system')){$('#system').value=T.system;$('#system').onchange=e=>{T.system=e.target.value;renderTable()}}
   document.querySelectorAll('.rbtn').forEach(b=>b.onclick=()=>{const r=b.dataset.r;T.rings.has(r)?T.rings.delete(r):T.rings.add(r);renderTable()});
   $('#q').oninput=e=>{T.q=e.target.value;const p=e.target.selectionStart;renderTable();const n=$('#q');n.focus();n.setSelectionRange(p,p)};
@@ -447,6 +486,10 @@ function renderDrawer(e){
     <dt>Tissue</dt><dd>${esc(e.tissue||'not stated')}</dd>
     <dt>Disease</dt><dd>${esc(e.disease||'not stated')}</dd>
     <dt>Species</dt><dd>${esc(e.species||'not stated')}</dd>
+    <dt>Paper type</dt><dd>${isPrimary(e)?'Primary study':esc(KIND[e.paper_kind].label)+' (second-hand: shown but not counted)'}${e.is_preprint?' · preprint, not yet peer reviewed':''}</dd>
+    <dt>Datasets</dt><dd>${(e.datasets||[]).length?e.datasets.map(accLink).join(', '):'none found in the paper text'}</dd>
+    ${e.lab?`<dt>Lab</dt><dd>${esc(e.lab.replace(/\b\w/g,c=>c.toUpperCase()))} (last author)</dd>`:''}
+    ${(e.cites||[]).length?`<dt>Quote cites</dt><dd>${e.cites.map(esc).join('; ')}: this sentence reports earlier work</dd>`:''}
     <dt>Found in</dt><dd>${esc(e.evidence_section)}</dd>
     <dt>Strength</dt><dd>${esc(e.match_strength)}${e.marker_specific?' · presented as specific markers':''}</dd>
    </dl>
@@ -456,7 +499,7 @@ function renderDrawer(e){
   if(matchMedia('(max-width:1000px)').matches)$('#drawer').scrollIntoView({behavior:'smooth',block:'start'});
 }
 function toCsv(rows){
-  const cols=['pmid','publication_year','label_group','celltype_label','ring','field','matched_user_genes','tissue','disease','species','evidence_type','match_strength','evidence_section','paper_title','journal','doi','pmcid','evidence_snippet'];
+  const cols=['pmid','publication_year','label_group','celltype_label','ring','field','paper_kind','is_preprint','datasets','lab','cites','matched_user_genes','tissue','disease','species','evidence_type','match_strength','evidence_section','paper_title','journal','doi','pmcid','evidence_snippet'];
   const q=v=>{v=Array.isArray(v)?v.join('; '):(v??'');if(typeof v==='object')v=fieldLabel(v);v=String(v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
   return [cols.join(','),...rows.map(r=>cols.map(c=>q(r[c])).join(','))].join('\n');
 }

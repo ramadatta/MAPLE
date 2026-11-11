@@ -108,6 +108,9 @@ class AnnotationResult(BaseModel):
     home_field: Optional[FieldContext] = None
     # Different names papers use for the same population ("also called").
     label_groups: list[LabelGroup] = Field(default_factory=list)
+    # Counts of primary papers, reviews, preprints and independent sources
+    # (papers sharing a dataset or a lab count once).
+    independence: dict = Field(default_factory=dict)
     warnings: list[str] = Field(default_factory=list)
     run_metadata: RunMetadata = Field(default_factory=RunMetadata)
     # Full internal pipeline state — only populated when include_raw_state=True.
@@ -211,6 +214,7 @@ def _state_to_result(
         alternatives=list(consensus.alternative_labels) if consensus else [],
         home_field=state.home_field,
         label_groups=list(state.label_groups),
+        independence=dict(state.independence),
         warnings=warnings,
         run_metadata=meta,
         raw_state=state if include_raw_state else None,

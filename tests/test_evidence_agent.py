@@ -340,3 +340,22 @@ def test_context_runs_both_field_and_cross_field_searches():
     assert any("lung" in t for t in texts)                       # field-focused searches
     cross = [q for q in with_field if q.gene.endswith(_ANY_FIELD_SUFFIX)]
     assert cross and all("lung" not in q.query.lower() for q in cross)  # own quota, no field filter
+
+
+def test_backfill_fills_types_and_authors_from_pubmed():
+    from types import SimpleNamespace
+
+    from maples.literature.pubmed import _backfill_pubmed_metadata
+    from maples.services.schemas import PubMedPaper
+
+    papers = [RetrievedPaper(pmid="42613076", title="t"), RetrievedPaper(pmid="10.1101/x", title="p")]
+
+    class Backend:
+        def fetch_papers(self, pmids):
+            assert pmids == ["42613076"]          # DOIs-as-ids are skipped
+            return [PubMedPaper(pmid="42613076", title="t", authors=["A B", "Jun Araya"],
+                                publication_types=["Journal Article", "Review"], doi="10.1/x")]
+
+    assert _backfill_pubmed_metadata(papers, SimpleNamespace(backend=Backend())) == 1
+    assert papers[0].publication_types == ["Journal Article", "Review"]
+    assert papers[0].authors[-1] == "Jun Araya" and papers[0].doi == "10.1/x"

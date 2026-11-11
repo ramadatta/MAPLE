@@ -130,8 +130,10 @@ def test_unknown_run_404(client):
     assert client.get("/api/run/nope").status_code == 404
 
 
-def test_cli_config_set_and_show(home, capsys):
+def test_cli_config_set_and_show(home, capsys, monkeypatch):
     from maples.cli import main
+
+    monkeypatch.setattr(user_settings, "bootstrap", lambda: None)  # never read the developer's .env
 
     assert main(["config", "--set", "OPENAI_MODEL=m3", "NCBI_EMAIL=a@b.org"]) == 0
     out = capsys.readouterr().out
@@ -139,8 +141,10 @@ def test_cli_config_set_and_show(home, capsys):
     assert main(["config", "--set", "NOPE=1"]) == 2
 
 
-def test_cli_version(capsys):
+def test_cli_version(capsys, monkeypatch):
     from maples.cli import main
+
+    monkeypatch.setattr(user_settings, "bootstrap", lambda: None)
 
     assert main(["--version"]) == 0
     assert capsys.readouterr().out.strip()

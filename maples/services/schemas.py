@@ -67,6 +67,8 @@ class PubMedPaper(BaseModel):
     pmcid: str = ""
     doi: str = ""
     is_open_access: bool = False
+    # e.g. ["Journal Article", "Review"] (PubMed) or ["review"] (OpenAlex).
+    publication_types: list[str] = Field(default_factory=list)
 
 
 class GeneEvidence(BaseModel):

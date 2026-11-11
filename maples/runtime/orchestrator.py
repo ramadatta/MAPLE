@@ -64,6 +64,23 @@ async def run_maple_pipeline(
             ", ".join(f"{k}: {v}" for k, v in sorted(ring_counts.items())),
         )
 
+        # How independent is the evidence? Reviews, shared datasets and shared labs.
+        from maples.independence import annotate_independence
+
+        state.independence = annotate_independence(
+            state.extraction.evidence_rows,
+            state.retrieval.retrieved_papers if state.retrieval else [],
+        )
+        ind = state.independence
+        add_audit(
+            state,
+            "Independence",
+            f"{ind.get('primary_papers', 0)} primary papers from "
+            f"{ind.get('independent_sources', 0)} independent sources",
+            f"reviews: {ind.get('reviews', 0)}, preprints: {ind.get('preprints', 0)}, "
+            f"datasets named: {ind.get('datasets', 0)}, labs: {ind.get('labs', 0)}",
+        )
+
         # Group different names for the same population before scoring candidates.
         from maples.runtime.label_agent import run_label_agent
 

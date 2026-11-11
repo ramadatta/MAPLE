@@ -88,6 +88,12 @@ class OpenAlexService:
             doi=_clean_doi(work.get("doi", "") or ids.get("doi", "")),
             pubmed_url=work.get("doi") or "",
             is_open_access=bool((work.get("open_access") or {}).get("is_oa")),
+            authors=[
+                ((a.get("author") or {}).get("display_name") or "").strip()
+                for a in (work.get("authorships") or [])
+                if (a.get("author") or {}).get("display_name")
+            ],
+            publication_types=[work["type"]] if work.get("type") else [],
         )
 
     def search_fulltext(self, query: str, max_results: int = 15) -> list[PubMedPaper]:
@@ -95,7 +101,7 @@ class OpenAlexService:
         params = {
             "filter": f"fulltext.search:{query}",
             "per-page": max(1, min(max_results, 50)),
-            "select": "id,title,display_name,doi,ids,publication_year,open_access,abstract_inverted_index",
+            "select": "id,title,display_name,doi,ids,publication_year,open_access,abstract_inverted_index,type,authorships",
         }
         if self.mailto:
             params["mailto"] = self.mailto

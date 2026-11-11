@@ -23,7 +23,7 @@ REQUEST_TIMEOUT = 15
 MAX_RETRIES = 3
 RATE_LIMIT_NO_KEY = 0.34
 RATE_LIMIT_WITH_KEY = 0.1
-CACHE_VERSION = "v3_article_pmcid"
+CACHE_VERSION = "v4_pubtypes_doi"
 
 
 class PubMedBackend(Protocol):
@@ -167,6 +167,7 @@ class EUtilitiesBackend:
             abstract = " ".join(abstract_parts)
 
             pmcid = ""
+            doi = ""
             is_open_access = False
             article_id_list = article.find("./PubmedData/ArticleIdList")
             article_ids = article_id_list.findall("./ArticleId") if article_id_list is not None else []
@@ -176,14 +177,18 @@ class EUtilitiesBackend:
                 if id_type == "pmc" and id_text:
                     pmcid = id_text
                 elif id_type == "doi" and id_text:
-                    # PubMedPaper does not currently expose DOI, but parsing the
-                    # ArticleIdList here keeps PMCID extraction scoped correctly.
-                    pass
+                    doi = id_text
             if pmcid:
                 is_open_access = True
 
+            publication_types = [
+                self._element_text(pt)
+                for pt in article.findall(".//PublicationTypeList/PublicationType")
+                if self._element_text(pt)
+            ]
+
             authors = []
-            for author in article.findall(".//Author"):
+            for author in article.findall(".//AuthorList/Author"):
                 last = author.find("LastName")
                 fore = author.find("ForeName")
                 if last is not None and last.text:
@@ -202,7 +207,9 @@ class EUtilitiesBackend:
                     authors=authors,
                     pubmed_url=f"https://pubmed.ncbi.nlm.nih.gov/{pmid}/",
                     pmcid=pmcid,
+                    doi=doi,
                     is_open_access=is_open_access,
+                    publication_types=publication_types,
                 )
             )
 

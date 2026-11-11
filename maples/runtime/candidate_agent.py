@@ -74,7 +74,9 @@ def _candidate_score(
     if not rows:
         return 0.0
 
-    unique_pmids = len({r.pmid for r in rows})
+    # Count independent sources, not papers: papers that share a dataset or a lab
+    # count once, and reviews/commentaries do not add support on their own.
+    unique_pmids = len({r.source_id or r.pmid for r in rows if r.paper_kind == "primary"})
     paper_fraction = unique_pmids / max(total_papers, 1)
 
     avg_strength = sum(_strength_score(r.match_strength) for r in rows) / len(rows)
@@ -165,7 +167,7 @@ def run_candidate_agent(
                 f"Excluded {dropped} weak DE-only/gene-mention row(s) from candidate scoring"
             )
 
-    total_papers = max(1, len({r.pmid for r in rows}))
+    total_papers = max(1, len({r.source_id or r.pmid for r in rows if r.paper_kind == "primary"}))
     total_user_genes = max(1, len(analysis_input.markers))
 
     # Group rows by normalized label

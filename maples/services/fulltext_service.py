@@ -16,6 +16,11 @@ import requests
 from maples.services.schemas import PubMedPaper
 from maples.services.cache_service import get_cache
 
+
+def _epmc_authors(author_string: str) -> list[str]:
+    """Europe PMC 'authorString' ("Smith J, Lee K, Chen X.") -> list of names."""
+    return [a.strip() for a in (author_string or "").rstrip(".").split(",") if a.strip()]
+
 logger = logging.getLogger(__name__)
 
 EPMC_SEARCH_URL = "https://www.ebi.ac.uk/europepmc/webservices/rest/search"
@@ -89,6 +94,8 @@ class EuropePMCService:
             pubmed_url=f"https://pubmed.ncbi.nlm.nih.gov/{pmid}/" if pmid else "",
             pmcid=res.get("pmcid", "") or "",
             is_open_access=res.get("isOpenAccess") == "Y",
+            authors=_epmc_authors(res.get("authorString", "")),
+            publication_types=[t.strip() for t in (res.get("pubType", "") or "").split(";") if t.strip()],
         )
 
     def search_open_access(

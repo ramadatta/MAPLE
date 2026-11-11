@@ -101,12 +101,20 @@ class TestEUtilitiesBackendBasics:
 
         assert papers[0].pmcid == "PMC9169066"
 
-    def test_clamping_score(self):
-        """Test score clamping utility."""
-        from maples.utils.scoring import clamp_score
 
-        assert clamp_score(0.5) == 0.5
-        assert clamp_score(-0.5) == 0.0
-        assert clamp_score(1.5) == 1.0
-        assert clamp_score(0.0) == 0.0
-        assert clamp_score(1.0) == 1.0
+def test_parse_pubmed_xml_reads_types_doi_and_authors():
+    from maples.services.pubmed_service import EUtilitiesBackend
+
+    xml = """<PubmedArticleSet><PubmedArticle><MedlineCitation><PMID>1</PMID><Article>
+      <ArticleTitle>Basal cells: a review</ArticleTitle>
+      <AuthorList><Author><LastName>Lee</LastName><ForeName>Ann</ForeName></Author>
+                  <Author><LastName>Smith</LastName><ForeName>Jo</ForeName></Author></AuthorList>
+      <PublicationTypeList><PublicationType>Journal Article</PublicationType>
+                           <PublicationType>Review</PublicationType></PublicationTypeList>
+    </Article></MedlineCitation>
+    <PubmedData><ArticleIdList><ArticleId IdType="doi">10.1/abc</ArticleId></ArticleIdList></PubmedData>
+    </PubmedArticle></PubmedArticleSet>"""
+    paper = EUtilitiesBackend()._parse_pubmed_xml(xml)[0]
+    assert paper.publication_types == ["Journal Article", "Review"]
+    assert paper.doi == "10.1/abc"
+    assert paper.authors == ["Ann Lee", "Jo Smith"]

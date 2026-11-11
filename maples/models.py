@@ -46,6 +46,8 @@ class RetrievedPaper(BaseModel):
     retrieval_query: str = ""
     retrieval_rank: int = 0
     retrieval_reason: str = ""
+    authors: list[str] = Field(default_factory=list)
+    publication_types: list[str] = Field(default_factory=list)
 
 class RetrievalResult(BaseModel):
     retrieved_papers: list[RetrievedPaper] = Field(default_factory=list)
@@ -110,6 +112,13 @@ class EvidenceRow(BaseModel):
     ring: Optional[Ring] = None
     # Shared name for cell-type labels that different papers use for the same population.
     label_group: str = ""
+    # How independent this evidence is (see maples/independence.py).
+    paper_kind: Literal["primary", "review", "commentary"] = "primary"
+    is_preprint: bool = False
+    datasets: list[str] = Field(default_factory=list)   # e.g. ["GSE135893"]
+    lab: str = ""                                        # last author, as a proxy for the lab
+    source_id: str = ""                                  # papers sharing a dataset or lab share this
+    cites: list[str] = Field(default_factory=list)       # earlier work the quote itself cites
 
 class ExtractionResult(BaseModel):
     evidence_rows: list[EvidenceRow] = Field(default_factory=list)
@@ -216,6 +225,7 @@ class AnalysisState(BaseModel):
     consensus: Optional[ConsensusResult] = None
     home_field: Optional[FieldContext] = None
     label_groups: list[LabelGroup] = Field(default_factory=list)
+    independence: dict = Field(default_factory=dict)
     table_state: TableState = Field(default_factory=TableState)
     audit_trail: list[AuditEntry] = Field(default_factory=list)
     errors: list[str] = Field(default_factory=list)

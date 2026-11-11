@@ -339,6 +339,8 @@ def _pubmed_paper_to_retrieved(
         source_url=getattr(paper, "pubmed_url", "") or f"https://pubmed.ncbi.nlm.nih.gov/{paper.pmid}/",
         retrieval_query=retrieval_query,
         retrieval_rank=retrieval_rank,
+        authors=list(getattr(paper, "authors", []) or []),
+        publication_types=list(getattr(paper, "publication_types", []) or []),
     )
 
 
@@ -650,6 +652,37 @@ def _add_scholar_discovery_papers(
     return added
 
 
+def _backfill_pubmed_metadata(papers: list[RetrievedPaper], service) -> int:
+    """Papers found via Europe PMC / OpenAlex / preprint search may lack PubMed's
+    publication types (needed to spot reviews) and author lists (needed to spot
+    the same lab). Fetch them in one batched, cached PubMed call."""
+    missing = [p for p in papers if p.pmid.isdigit() and (not p.publication_types or not p.authors)]
+    if not missing:
+        return 0
+    filled = 0
+    for start in range(0, len(missing), 200):
+        batch = missing[start:start + 200]
+        try:
+            fetched = {f.pmid: f for f in service.backend.fetch_papers([p.pmid for p in batch])}
+        except Exception as exc:  # metadata is a nice-to-have; never fail retrieval
+            logger.warning("PubMed metadata backfill failed: %s", exc)
+            return filled
+        for paper in batch:
+            meta = fetched.get(paper.pmid)
+            if meta is None:
+                continue
+            if not paper.publication_types and meta.publication_types:
+                paper.publication_types = list(meta.publication_types)
+            if not paper.authors and meta.authors:
+                paper.authors = list(meta.authors)
+            if not paper.doi and meta.doi:
+                paper.doi = meta.doi
+            if not paper.journal and meta.journal:
+                paper.journal = meta.journal
+            filled += 1
+    return filled
+
+
 def retrieve_papers(analysis_input: AnalysisInput, papers_per_gene: int = 5) -> RetrievalResult:
     """Build queries from input, retrieve from PubMed, return RetrievalResult."""
     from maples.services.pubmed_service import PubMedService
@@ -703,6 +736,10 @@ def retrieve_papers(analysis_input: AnalysisInput, papers_per_gene: int = 5) -> 
         retrieved_papers, seen_pmids, seen_dois, analysis_input, audit_notes
     )
     fulltext_added = ft_discovery_added + openalex_added + scholar_added + preprint_added
+
+    backfilled = _backfill_pubmed_metadata(retrieved_papers, service)
+    if backfilled:
+        audit_notes.append(f"Filled in publication type/authors for {backfilled} paper(s) from PubMed")
 
     # Surface discovery outcome at the top so it shows in the UI reasoning trace.
     audit_notes.insert(
