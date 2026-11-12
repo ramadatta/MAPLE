@@ -37,6 +37,12 @@ each row is a paper that links some of your genes to a named cell type or cell s
 the exact supporting sentence(s), the PMID, and the paper's own tissue, disease and species.
 A summary and a skeptical "devil's advocate" critique sit on top of the table.
 
+The local app shows the results in six tabs: a summary (how independent the evidence is,
+where it comes from, different names for the same population), a **field map** (your field
+in the centre, near and far fields around it; or your genes in the centre when no field is
+given), a **gene × field** dot plot, a **body map** with a year slider, a **timeline**, and a
+filterable evidence table. Every dot opens the exact quotes behind it.
+
 Cell-type labels always come from the retrieved papers, never from hard-coded marker rules
 or the model's background knowledge.
 

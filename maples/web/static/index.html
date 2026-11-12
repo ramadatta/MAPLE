@@ -9,14 +9,16 @@
 /* Runs offline: system fonts only, nothing loaded from the internet. */
 :root{
   --bg:#F2F5F4; --surface:#FFFFFF; --sunken:#E8EEEC; --ink:#15211E; --muted:#5A6B66; --line:#D3DDDA;
-  --home:#0E7A6B; --near:#B97C0C; --far:#5753C4; --gap:#C2364C; --ok:#1B7F3B; --mark:#FCE9A8; --markink:#3A2A00; --on:#FFFFFF;
+  --home:#0E7A6B; --near:#B97C0C; --far:#5753C4; --gap:#C2364C; --ok:#1B7F3B; --mark:#FCE9A8; --markink:#3A2A00; --on:#FFFFFF; --sil:#DCE5E2;
+  --s0:#8A9893; --s1:#2F7FC1; --s2:#C47A12; --s3:#7B4FC9; --s4:#C2364C; --s5:#C95A93; --s6:#3E9E5C; --s7:#1F9FA8; --s8:#8A6D3B; --s9:#E0562B; --s10:#6C7A2E;
   --f-body:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
   --f-mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
   color-scheme:light;
 }
 @media (prefers-color-scheme: dark){:root{
   --bg:#0E1412; --surface:#151D1B; --sunken:#1C2623; --ink:#E4ECE9; --muted:#93A5A0; --line:#2A3633;
-  --home:#3CC2AE; --near:#E5B54C; --far:#9F9BF4; --gap:#F27389; --ok:#5BD07E; --mark:#5A4A12; --markink:#FFF1C2; --on:#0E1412; color-scheme:dark}}
+  --home:#3CC2AE; --near:#E5B54C; --far:#9F9BF4; --gap:#F27389; --ok:#5BD07E; --mark:#5A4A12; --markink:#FFF1C2; --on:#0E1412; --sil:#22302C;
+  --s0:#7E8E89; --s1:#6DAEEB; --s2:#E5B54C; --s3:#A98BF0; --s4:#F27389; --s5:#EB8DBE; --s6:#6CCB8A; --s7:#4FD0D8; --s8:#C9A774; --s9:#F58A63; --s10:#A9B866; color-scheme:dark}}
 *{box-sizing:border-box}
 html,body{margin:0}
 [hidden]{display:none!important}
@@ -129,6 +131,31 @@ dialog::backdrop{background:rgba(0,0,0,.35)}
 .groups li{border:1px solid var(--line);border-radius:8px;padding:8px 10px}
 .groups .aka{color:var(--muted);font-size:12.5px}
 td .sub{color:var(--muted);font-size:12px}
+.viewhead{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:baseline;margin-bottom:8px}
+.viewhead p{margin:0;color:var(--muted);font-size:13px;max-width:72ch}
+svg text{fill:var(--ink);font-family:var(--f-body)}
+svg .mut{fill:var(--muted)} svg .mono{font-family:var(--f-mono)}
+svg .ringlbl{font-size:11px;letter-spacing:.1em;font-weight:600}
+.node,.organ,.dotc,.tp{cursor:pointer}
+.node .lbl-hide{display:none}
+.node:hover .lbl-hide,.node:focus .lbl-hide,.node.on .lbl-hide{display:inline}
+#fm.focus .edge{opacity:.08} #fm.focus .node{opacity:.25} #fm.focus .on{opacity:1!important}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;color:var(--muted);font-size:12.5px;margin-top:8px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:11px;height:11px;border-radius:50%;background:var(--c);display:inline-block}
+.sw.dash{background:none;border:2px dashed var(--gap)} .sw.hollow{background:none;border:2px solid var(--c)}
+.bodygrid{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:760px){.bodygrid{grid-template-columns:minmax(0,1fr)}}
+.slider{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.slider input{flex:1;min-width:140px;width:auto;accent-color:var(--home);padding:0}
+.year{font-size:32px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1}
+.spread{list-style:none;padding:0;margin:12px 0 0;display:grid;gap:5px}
+.spread li{display:flex;gap:10px;font-size:13px} .spread li.future{opacity:.35}
+.spread .y{font-family:var(--f-mono);font-size:12px;color:var(--muted);width:3.2em;flex:none}
+.qlist{display:grid;gap:8px}
+.qcard{all:unset;cursor:pointer;display:grid;gap:4px;border:1px solid var(--line);border-left:4px solid var(--c);border-radius:8px;padding:8px 10px;box-sizing:border-box}
+.qcard:hover{background:var(--sunken)} .qcard:focus-visible{outline:2px solid var(--far)}
+.qcard .qq{font-size:13px;line-height:1.5} .qcard .qm{font-size:12px;color:var(--muted)}
 .kind{display:inline-block;font-size:11px;font-weight:600;padding:0 6px;border-radius:4px;border:1px solid var(--c);color:var(--c);margin:2px 4px 0 0}
 .indep{background:var(--sunken);border-radius:10px;padding:10px 12px;font-size:13.5px}
 .indep b{font-variant-numeric:tabular-nums}
@@ -190,11 +217,11 @@ td .sub{color:var(--muted);font-size:12px}
       </div>
       <div class="tabs" role="tablist">
         <button class="tab" role="tab" data-view="summary" aria-selected="true">Summary</button>
+        <button class="tab" role="tab" data-view="field-map" aria-selected="false">Field map</button>
+        <button class="tab" role="tab" data-view="dot-plot" aria-selected="false">Gene × field</button>
+        <button class="tab" role="tab" data-view="body-map" aria-selected="false">Body map</button>
+        <button class="tab" role="tab" data-view="timeline" aria-selected="false">Timeline</button>
         <button class="tab" role="tab" data-view="table" aria-selected="false">Evidence table</button>
-        <button class="tab" disabled title="Coming in the next step">Field map<small>soon</small></button>
-        <button class="tab" disabled title="Coming in the next step">Gene × field<small>soon</small></button>
-        <button class="tab" disabled title="Coming in the next step">Body map<small>soon</small></button>
-        <button class="tab" disabled title="Coming in the next step">Timeline<small>soon</small></button>
       </div>
       <div class="view" id="view"></div>
     </main>
@@ -239,7 +266,7 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const EXAMPLE={genes:'TP63, KRT17, KRT5, CDKN2A, CDKN1A, LAMB3, LAMC2, VIM, MMP7, SOX4',tissue:'lung',disease:'idiopathic pulmonary fibrosis',species:'Human'};
 const ETYPE={direct_marker_celltype_assignment:'Direct marker assignment',cluster_annotation:'Cluster annotation',differential_expression_only:'Differential expression only',gene_mention_only:'Gene mentioned only'};
 const CONFC={High:'var(--ok)',Medium:'var(--near)',Low:'var(--gap)',Insufficient:'var(--muted)'};
-let SET=null, RESULT=null, GENES=[], view='summary', sel=null;
+let SET=null, RESULT=null, GENES=[], view='summary', sel=null, WANT={};
 const T={q:'',genes:new Set(),type:'',sort:'genes',rings:new Set(['home','near','far','unplaced']),system:'',secondary:true};
 const RINGS={home:{label:'Your field',c:'var(--home)'},near:{label:'Near',c:'var(--near)'},far:{label:'Far',c:'var(--far)'},unplaced:{label:'Not stated',c:'var(--muted)'}};
 const RING_ORDER=['home','near','far','unplaced'];
@@ -316,7 +343,8 @@ $('#openSettings').onclick=()=>{if(SET)fillSettings();$('#settings').showModal()
 
 /* ---------- run ---------- */
 // The current run lives in the address (#run-<id>) so a reload keeps it.
-function setRunHash(id){try{history.replaceState(null,'','#run-'+id)}catch(e){location.hash='run-'+id}}
+let RUN_ID=null;
+function setRunHash(id){RUN_ID=id;const h='#run-'+id+(RESULT?`/${view}/${MODE}`:'');try{history.replaceState(null,'',h)}catch(e){location.hash=h.slice(1)}}
 $('#example').onclick=()=>{$('#genes').value=EXAMPLE.genes;$('#tissue').value=EXAMPLE.tissue;$('#disease').value=EXAMPLE.disease;$('#species').value=EXAMPLE.species};
 $('#runForm').onsubmit=async e=>{
   e.preventDefault();$('#formErr').textContent='';
@@ -341,7 +369,7 @@ async function poll(id){
     const job=await api('/api/run/'+id);showProgress(job);
     if(job.status==='running'){setTimeout(()=>poll(id),1000);return}
     $('#runBtn').disabled=false;
-    if(job.status==='done'){RESULT=job.result;GENES=job.genes;T.genes=new Set();T.q='';T.type='';T.system='';T.rings=new Set(RING_ORDER);sel=null;view='summary';MODE=RESULT.home_field?'focused':'agnostic';renderResults()}
+    if(job.status==='done'){RESULT=job.result;GENES=job.genes;T.genes=new Set();T.q='';T.type='';T.system='';T.rings=new Set(RING_ORDER);sel=null;LIST=null;BODY_YEAR=null;view=WANT.view||'summary';MODE=(WANT.mode==='agnostic'||!RESULT.home_field)?'agnostic':(WANT.mode||'focused');WANT={};renderResults();setRunHash(id)}
   }catch(e){$('#formErr').textContent=e.message;$('#runBtn').disabled=false;$('#progress').hidden=true}
 }
 
@@ -359,11 +387,11 @@ function renderResults(){
     if(b.dataset.mode==='focused'){b.disabled=!hasHome;b.title=hasHome?'':'Add your field (organ, disease or species) to use this view'}});
   $('#homechip').innerHTML=hasHome?`<i></i>Your field: <b>${esc(fieldLabel(RESULT.home_field))}</b>`:'<span class="hint" style="margin:0">No field given: showing all fields equally</span>';
   document.querySelectorAll('.tab[data-view]').forEach(t=>t.setAttribute('aria-selected',t.dataset.view===view));
-  (view==='summary'?renderSummary:renderTable)();
+  ({summary:renderSummary,'field-map':renderFieldMap,'dot-plot':renderDotPlot,'body-map':renderBodyMap,timeline:renderTimeline,table:renderTable}[view]||renderSummary)();
   if(!sel)renderDrawerIntro();
 }
-document.querySelectorAll('.tab[data-view]').forEach(t=>t.onclick=()=>{view=t.dataset.view;renderResults()});
-document.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{if(b.disabled)return;MODE=b.dataset.mode;renderResults()});
+document.querySelectorAll('.tab[data-view]').forEach(t=>t.onclick=()=>{view=t.dataset.view;renderResults();if(RUN_ID)setRunHash(RUN_ID)});
+document.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{if(b.disabled)return;MODE=b.dataset.mode;renderResults();if(RUN_ID)setRunHash(RUN_ID)});
 function papersIn(rows){return new Set(rows.map(e=>e.pmid)).size}
 function whereSection(ev){
   if(!ev.length)return '';
@@ -464,7 +492,7 @@ function renderTable(){
   $('#sort').onchange=e=>{T.sort=e.target.value;renderTable()};
   $('#dlCsv2').onclick=()=>download('maples-evidence.csv',toCsv(rows),'text/csv');
   document.querySelectorAll('.gbtn').forEach(b=>b.onclick=()=>{const g=b.dataset.g;T.genes.has(g)?T.genes.delete(g):T.genes.add(g);renderTable()});
-  document.querySelectorAll('tbody tr').forEach(tr=>{const open=()=>{sel=+tr.dataset.i;renderTable();renderDrawer(RESULT.evidence[sel])};
+  document.querySelectorAll('tbody tr').forEach(tr=>{const open=()=>{sel=+tr.dataset.i;LIST=null;renderTable();renderDrawer(RESULT.evidence[sel])};
     tr.onclick=open;tr.onkeydown=e=>{if(e.key==='Enter')open()}});
 }
 function renderDrawerIntro(){
@@ -494,7 +522,8 @@ function renderDrawer(e){
     <dt>Strength</dt><dd>${esc(e.match_strength)}${e.marker_specific?' · presented as specific markers':''}</dd>
    </dl>
    <div class="actions">${links.join(' ')}</div>
-   <button class="btn" id="copyQ">Copy quote</button>`;
+   <div class="actions"><button class="btn" id="copyQ">Copy quote</button>${LIST&&LIST.rows.includes(e)?'<button class="btn" id="backList">Back to the list</button>':''}</div>`;
+  if($('#backList'))$('#backList').onclick=()=>openRows(LIST);
   $('#copyQ').onclick=async()=>{try{await navigator.clipboard.writeText(e.evidence_snippet);$('#copyQ').textContent='Copied'}catch(_){$('#copyQ').textContent='Copy failed'}};
   if(matchMedia('(max-width:1000px)').matches)$('#drawer').scrollIntoView({behavior:'smooth',block:'start'});
 }
@@ -507,6 +536,262 @@ function download(name,text,type){
   const url=URL.createObjectURL(new Blob([text],{type}));const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 
+/* ---------- visual tabs: field map, gene × field, body map, timeline ---------- */
+const SYS_COLORS={'respiratory':'var(--s1)','digestive':'var(--s2)','urinary':'var(--s3)','blood and immune':'var(--s4)','skin':'var(--s5)','reproductive':'var(--s6)','nervous':'var(--s7)','musculoskeletal':'var(--s8)','cardiovascular':'var(--s9)','head and neck':'var(--s10)'};
+const sysColor=s=>SYS_COLORS[s]||'var(--s0)';
+const fieldKey=f=>f?[f.organ||'?',f.disease||'?',f.species||'?'].join('|'):'?|?|?';
+const ringOf=e=>e.ring||'unplaced';
+const colorOf=e=>MODE==='focused'?RINGS[ringOf(e)].c:sysColor(systemOf(e));
+const trunc=(s,n)=>s&&s.length>n?s.slice(0,n-1)+'…':(s||'');
+const shortSp=f=>f&&f.species?(f.species==='Human'?'Hs':f.species==='Mouse'?'Mm':f.species.slice(0,2)):'';
+function evidenceRows(){return (RESULT.evidence||[]).filter(e=>T.secondary||isPrimary(e))}
+function homeGenes(){return new Set((RESULT.evidence||[]).filter(e=>e.ring==='home').flatMap(e=>e.matched_user_genes))}
+
+let LIST=null; // last multi-quote list shown in the drawer (for "Back")
+function openRows({eyebrow,title,sub='',rows,note=''}){
+  rows=[...rows].sort((a,b)=>(isPrimary(b)-isPrimary(a))||((b.publication_year||0)-(a.publication_year||0)));
+  LIST={eyebrow,title,sub,rows,note};
+  const i=indep(rows);
+  $('#drawer').innerHTML=`<div><div class="eyebrow">${esc(eyebrow)}</div><h2>${esc(title)}</h2>${sub?`<p class="hint" style="margin:2px 0 0">${sub}</p>`:''}</div>
+   <div class="indep"><b>${i.papers}</b> paper${i.papers===1?'':'s'} → <b>${i.sources}</b> independent source${i.sources===1?'':'s'}${i.second?` · ${i.second} review${i.second===1?'':'s'} not counted`:''}</div>
+   ${note}
+   <div class="qlist">${rows.map((e,k)=>`<button class="qcard" data-k="${k}" style="--c:${colorOf(e)}"><span class="qq">${hl(trunc(e.evidence_snippet,240))}</span>
+     <span class="qm"><b>${esc(nameOf(e))}</b> · ${esc(fieldLabel(e.field))} · ${e.publication_year??''} · PMID ${esc(e.pmid)}</span><span>${kindTags(e)}</span></button>`).join('')}</div>`;
+  $('#drawer').querySelectorAll('.qcard').forEach(b=>b.onclick=()=>renderDrawer(rows[+b.dataset.k]));
+  if(matchMedia('(max-width:1000px)').matches)$('#drawer').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function gapNote(genes){
+  if(MODE!=='focused'||!genes.length)return '';
+  const home=(RESULT.evidence||[]).filter(e=>e.ring==='home');
+  return `<div class="warn"><b>Not found in your field:</b> none of the ${new Set(home.map(e=>e.pmid)).size} papers from ${esc(fieldLabel(RESULT.home_field))} that MAPLES read link ${genes.map(esc).join(', ')} to a cell type. ${RESULT.coverage?.abstract_only_papers?`${RESULT.coverage.abstract_only_papers} of the papers considered were read from the abstract only, so this may be a gap in access rather than in knowledge.`:''}</div>`;
+}
+function legend(items){return `<div class="legend">${items.map(([c,t,cls])=>`<span><i class="sw ${cls||''}" style="--c:${c}"></i>${t}</span>`).join('')}</div>`}
+function systemLegend(rows){const s=[...new Set(rows.map(systemOf))];return legend(s.map(x=>[sysColor(x),cap(x)]))}
+function bindKeys(root,sel,fn){root.querySelectorAll(sel).forEach(el=>{el.onclick=()=>fn(el);el.onkeydown=ev=>{if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();fn(el)}}})}
+
+/* nodes = one cell population in one field */
+function buildNodes(rows){
+  const m=new Map();
+  rows.forEach(e=>{const k=fieldKey(e.field)+'#'+nameOf(e);if(!m.has(k))m.set(k,{key:k,field:e.field,name:nameOf(e),ring:ringOf(e),system:systemOf(e),rows:[]});m.get(k).rows.push(e)});
+  return [...m.values()].map(n=>{n.genes=[...new Set(n.rows.flatMap(e=>e.matched_user_genes))];const i=indep(n.rows);n.papers=i.papers;n.sources=i.sources;n.r=8+5*Math.sqrt(n.papers);return n});
+}
+
+function renderFieldMap(){
+  const rows=evidenceRows();
+  if(!rows.length){$('#view').innerHTML='<p class="empty">No quotes to draw yet.</p>';return}
+  const focused=MODE==='focused',W=1100,H=900,cx=550,cy=450;
+  let nodes=buildNodes(rows),hidden=0,unplaced=0;
+  const HG=homeGenes();
+  let rings;
+  if(focused){
+    unplaced=nodes.filter(n=>n.ring==='unplaced').length;nodes=nodes.filter(n=>n.ring!=='unplaced');
+    rings={home:{r:0,max:6},near:{r:235,max:14},far:{r:355,max:18}};
+    nodes.forEach(n=>{n.band=n.ring;n.novel=n.ring==='home'?[]:n.genes.filter(g=>!HG.has(g))});
+  }else{
+    const total=Math.max(1,GENES.length);
+    rings={inner:{r:160,max:12},middle:{r:260,max:16},outer:{r:360,max:18}};
+    nodes.forEach(n=>{const k=n.genes.length;n.band=(k>=3||k/total>=.5)?'inner':k>=2?'middle':'outer';n.novel=[]});
+  }
+  // keep the largest nodes per band so the map stays readable
+  const kept=[];Object.entries(rings).forEach(([b,cfg])=>{const ns=nodes.filter(n=>n.band===b).sort((a,c)=>c.papers-a.papers||c.genes.length-a.genes.length);hidden+=Math.max(0,ns.length-cfg.max);kept.push(...ns.slice(0,cfg.max))});
+  nodes=kept;
+  // positions: band rings, nodes ordered by organ system so related fields sit together
+  Object.entries(rings).forEach(([b,cfg],bi)=>{
+    const ns=nodes.filter(n=>n.band===b).sort((a,c)=>a.system.localeCompare(c.system)||fieldLabel(a.field).localeCompare(fieldLabel(c.field)));
+    if(focused&&b==='home'){const rr=ns.length>1?95:0;ns.forEach((n,i)=>{const a=(-90+i*360/ns.length)*Math.PI/180;n.x=cx+rr*Math.cos(a);n.y=cy+rr*Math.sin(a);n.a=ns.length>1?a:null});
+      const lim=ns.length>4?3:ns.length;[...ns].sort((a,c)=>c.papers-a.papers).forEach((n,i)=>n.showLabel=i<lim);return}
+    const off=[0,0,.5,.25][bi]||0;ns.forEach((n,i)=>{const a=(-90+(i+off)*360/Math.max(ns.length,1))*Math.PI/180;n.a=a;n.x=cx+cfg.r*Math.cos(a);n.y=cy+cfg.r*Math.sin(a)});
+    // label only the larger nodes when a ring is crowded; the rest show on hover
+    const lim=ns.length>8?6:ns.length;[...ns].sort((a,c)=>c.papers-a.papers).forEach((n,i)=>n.showLabel=i<lim);
+  });
+  const homeNodes=nodes.filter(n=>n.band==='home');
+  let edges='',svgNodes='',deco='';
+  if(focused){
+    deco+=`<circle cx="${cx}" cy="${cy}" r="150" fill="var(--home)" fill-opacity=".07"/>
+      <text x="${cx}" y="${cy-158}" text-anchor="middle" class="ringlbl" style="fill:var(--home)">YOUR FIELD</text>
+      <circle cx="${cx}" cy="${cy}" r="${rings.near.r}" fill="none" stroke="var(--near)" stroke-opacity=".35" stroke-dasharray="2 6"/>
+      <circle cx="${cx}" cy="${cy}" r="${rings.far.r}" fill="none" stroke="var(--far)" stroke-opacity=".35" stroke-dasharray="2 6"/>
+`;
+    if(!homeNodes.length)deco+=`<text x="${cx}" y="${cy+4}" text-anchor="middle" class="mut" style="font-size:12px">No quotes from your field</text>`;
+  }else{
+    const shown=GENES.slice(0,12);
+    deco+=`<circle cx="${cx}" cy="${cy}" r="78" fill="var(--home)" fill-opacity=".09" stroke="var(--home)" stroke-opacity=".4"/>
+      <text x="${cx}" y="${cy-44}" text-anchor="middle" class="ringlbl" style="fill:var(--home)">YOUR GENES</text>
+      ${shown.map((g,i)=>`<text x="${cx+(i%2?34:-34)}" y="${cy-22+Math.floor(i/2)*15}" text-anchor="middle" class="mono" style="font-size:11px">${esc(g)}</text>`).join('')}
+      ${['inner','middle','outer'].map(b=>`<circle cx="${cx}" cy="${cy}" r="${rings[b].r}" fill="none" stroke="var(--line)" stroke-dasharray="2 6"/>`).join('')}`;
+  }
+  nodes.forEach((n,i)=>{
+    n.i=i;
+    if(n.band==='home')return;
+    if(focused){
+      const shared=n.genes.filter(g=>HG.has(g));let t={x:cx,y:cy},best=-1;
+      homeNodes.forEach(h=>{const o=n.genes.filter(g=>h.genes.includes(g)).length;if(o>best){best=o;t=h}});
+      edges+=shared.length?`<line class="edge" data-n="${i}" x1="${t.x}" y1="${t.y}" x2="${n.x}" y2="${n.y}" stroke="${RINGS[n.ring].c}" stroke-opacity=".45" stroke-width="${1+shared.length*1.5}" stroke-linecap="round"><title>Shares ${esc(shared.join(', '))} with your field</title></line>`
+        :`<line class="edge" data-n="${i}" x1="${cx}" y1="${cy}" x2="${n.x}" y2="${n.y}" stroke="var(--gap)" stroke-opacity=".5" stroke-width="1.2" stroke-dasharray="3 5"><title>No genes shared with your field</title></line>`;
+    }else{
+      edges+=`<line class="edge" data-n="${i}" x1="${cx}" y1="${cy}" x2="${n.x}" y2="${n.y}" stroke="${sysColor(n.system)}" stroke-opacity=".35" stroke-width="${1+n.genes.length*1.2}" stroke-linecap="round"><title>Explains ${esc(n.genes.join(', '))}</title></line>`;
+    }
+  });
+  // label positions, then a greedy overlap check: bigger dots keep their labels,
+  // a label that would collide with one already placed only shows on hover
+  nodes.forEach(n=>{let lx,ly,anc='middle';
+    if(n.a===null){lx=n.x;ly=n.y+n.r+15}
+    else{const co=Math.cos(n.a),si=Math.sin(n.a);lx=n.x+co*(n.r+9);ly=n.y+si*(n.r+9)+(si>.35?12:si<-.35?-20:-3);anc=co>.3?'start':co<-.3?'end':'middle'}
+    const w=Math.max(trunc(fieldLabel(n.field),30).length*6.9,trunc(n.name,30).length*6.2),h=n.novel.length?44:30;
+    const x0=anc==='start'?lx:anc==='end'?lx-w:lx-w/2;n.lab={lx,ly,anc,box:[x0,ly-12,x0+w,ly-12+h]}});
+  const overlaps=(b,o)=>b[0]<o[2]&&b[2]>o[0]&&b[1]<o[3]&&b[3]>o[1];
+  const placedBoxes=[focused?[cx-48,cy-170,cx+48,cy-152]:[cx-80,cy-80,cx+80,cy+80]]; // centre caption / gene disc
+  [...nodes].sort((a,c)=>c.papers-a.papers||c.genes.length-a.genes.length).forEach(n=>{
+    if(n.showLabel===false)return;
+    const b=n.lab.box;
+    const hitsDot=nodes.some(o=>o!==n&&overlaps(b,[o.x-o.r-2,o.y-o.r-2,o.x+o.r+2,o.y+o.r+2]));
+    if(hitsDot||placedBoxes.some(o=>overlaps(b,o)))n.showLabel=false;else placedBoxes.push(b)});
+  nodes.forEach(n=>{
+    const c=focused?RINGS[n.ring].c:sysColor(n.system);const {lx,ly,anc}=n.lab;
+    const lblCls=n.showLabel===false?'lbl lbl-hide':'lbl';
+    svgNodes+=`<g class="node" data-n="${n.i}" tabindex="0" role="button" aria-label="${esc(n.name)}, ${esc(fieldLabel(n.field))}, ${n.papers} papers">
+      <title>${esc(n.name)} · ${esc(fieldLabel(n.field))}\n${n.papers} paper(s), ${n.sources} independent source(s)\nGenes: ${esc(n.genes.join(', '))}</title>
+      ${n.novel.length?`<circle r="${n.r+6}" cx="${n.x}" cy="${n.y}" fill="none" stroke="var(--gap)" stroke-width="2" stroke-dasharray="4 3"/>`:''}
+      <circle r="${n.r}" cx="${n.x}" cy="${n.y}" fill="${c}" ${n.sources?'':'fill-opacity=".25" stroke="'+c+'" stroke-width="2"'}/>
+      <text x="${n.x}" y="${n.y+4}" text-anchor="middle" class="mono" style="fill:var(--on);font-size:11px;font-weight:600">${n.papers}</text>
+      <g class="${lblCls}"><text x="${lx}" y="${ly}" text-anchor="${anc}" style="font-size:12.5px;font-weight:600">${esc(trunc(fieldLabel(n.field),30))}</text>
+      <text x="${lx}" y="${ly+15}" text-anchor="${anc}" class="mut" style="font-size:11.5px">${esc(trunc(n.name,30))}</text>
+      ${n.novel.length?`<text x="${lx}" y="${ly+30}" text-anchor="${anc}" class="mono" style="fill:var(--gap);font-size:11px">+ ${esc(n.novel.join(', '))}</text>`:''}</g>
+    </g>`;
+  });
+  const notes=[];if(hidden)notes.push(`${hidden} smaller dot${hidden===1?' is':'s are'} left out to keep the map readable`);if(unplaced)notes.push(`${unplaced} population${unplaced===1?'':'s'} from papers that don't state their field ${unplaced===1?'is':'are'} not drawn`);
+  $('#view').innerHTML=`<div class="viewhead"><h2>Field map</h2><p>${focused
+      ?'Your field sits in the centre. Each dot is one cell population in one field, sized by papers. Lines show genes shared with your field; dashed red rings bring genes your field has not reported.'
+      :'Your genes sit in the centre. Each dot is one cell population in one field: the closer it is, the more of your genes it explains. Colours show organ systems.'}</p></div>
+   <div class="scroll"><svg id="fm" viewBox="0 0 ${W} ${H}" style="min-width:680px;width:100%;height:auto" role="img" aria-label="Field map">${deco}${edges}${svgNodes}</svg></div>
+   ${focused?legend([['var(--home)','Your field (centre)'],['var(--near)','Near: same organ or organ system (middle ring)'],['var(--far)','Far: other organs (outer ring)'],['','Brings genes not found in your field','dash'],['var(--muted)','Faded dot: only reviews','hollow']])
+     :systemLegend(nodes.flatMap(n=>n.rows))+'<p class="hint" style="margin:4px 0 0">Inner ring: 3 or more of your genes (or half the panel). Middle ring: 2 genes. Outer ring: 1 gene. Hover a dot to see its name.</p>'}
+   ${notes.length?`<p class="hint">${notes.join('. ')}. All quotes are in the Evidence table.</p>`:''}`;
+  const svg=$('#fm');
+  svg.querySelectorAll('.node').forEach(el=>{
+    const on=()=>{svg.classList.add('focus');el.classList.add('on');svg.querySelectorAll(`.edge[data-n="${el.dataset.n}"]`).forEach(x=>x.classList.add('on'))};
+    const off=()=>{svg.classList.remove('focus');svg.querySelectorAll('.on').forEach(x=>x.classList.remove('on'))};
+    el.addEventListener('mouseenter',on);el.addEventListener('mouseleave',off);el.addEventListener('focus',on);el.addEventListener('blur',off);
+  });
+  bindKeys(svg,'.node',el=>{const n=nodes[+el.dataset.n];
+    openRows({eyebrow:focused?RINGS[n.ring].label:cap(n.system),title:n.name,sub:esc(fieldLabel(n.field)),rows:n.rows,note:gapNote(n.novel)})});
+}
+
+function renderDotPlot(){
+  const rows=evidenceRows();
+  if(!rows.length){$('#view').innerHTML='<p class="empty">No quotes to draw yet.</p>';return}
+  const focused=MODE==='focused',HG=homeGenes();
+  const byField=new Map();rows.forEach(e=>{const k=fieldKey(e.field);if(!byField.has(k))byField.set(k,{key:k,field:e.field,ring:ringOf(e),system:systemOf(e),rows:[]});byField.get(k).rows.push(e)});
+  let cols=[...byField.values()];
+  cols.sort((a,b)=>focused?(RING_ORDER.indexOf(a.ring)-RING_ORDER.indexOf(b.ring))||(indep(b.rows).papers-indep(a.rows).papers)
+                          :a.system.localeCompare(b.system)||(indep(b.rows).papers-indep(a.rows).papers));
+  const MAXC=24,hidden=Math.max(0,cols.length-MAXC);
+  if(hidden){const keep=new Set([...cols].sort((a,b)=>indep(b.rows).papers-indep(a.rows).papers).slice(0,MAXC).map(c=>c.key));cols=cols.filter(c=>keep.has(c.key))}
+  const genes=GENES.filter(g=>rows.some(e=>e.matched_user_genes.includes(g))).concat(GENES.filter(g=>!rows.some(e=>e.matched_user_genes.includes(g))));
+  const L=110,TOP=170,CW=46,RH=36,W=L+cols.length*CW+30,H=TOP+genes.length*RH+16;
+  let s='';
+  cols.forEach((c,j)=>{const x=L+j*CW+CW/2;
+    if(focused&&c.ring==='home')s+=`<rect x="${L+j*CW+2}" y="${TOP-6}" width="${CW-4}" height="${genes.length*RH+8}" rx="6" fill="var(--home)" fill-opacity=".08"/>`;
+    s+=`<text transform="translate(${x+4},${TOP-12}) rotate(-45)" style="font-size:11.5px;font-weight:${c.ring==='home'&&focused?700:500};fill:${focused?RINGS[c.ring].c:sysColor(c.system)}">${esc(trunc(fieldLabel(c.field),28))}</text>`});
+  genes.forEach((g,i)=>{const y=TOP+i*RH+RH/2,gap=focused&&!HG.has(g);
+    s+=`<line x1="${L}" x2="${W-24}" y1="${y}" y2="${y}" stroke="var(--line)"/>`;
+    s+=`<text x="${L-14}" y="${y+4}" text-anchor="end" class="mono" style="font-size:12.5px;${gap?'fill:var(--gap)':''}">${esc(g)}</text>`;
+    if(gap)s+=`<circle cx="${L-6}" cy="${y}" r="3" fill="var(--gap)"/>`;
+    cols.forEach((c,j)=>{const rs=c.rows.filter(e=>e.matched_user_genes.includes(g));if(!rs.length)return;
+      const i2=indep(rs),x=L+j*CW+CW/2,r=Math.min(16,4+4.5*Math.sqrt(i2.papers)),col=focused?RINGS[c.ring].c:sysColor(c.system);
+      s+=`<circle class="dotc" data-g="${esc(g)}" data-f="${esc(c.key)}" tabindex="0" role="button" cx="${x}" cy="${y}" r="${r}" fill="${i2.sources?col:'var(--surface)'}" fill-opacity="${i2.sources?.85:1}" stroke="${i2.sources?'none':col}" stroke-width="2"><title>${esc(g)} in ${esc(fieldLabel(c.field))}: ${i2.papers} paper(s), ${i2.sources} independent source(s)</title></circle>`});
+  });
+  $('#view').innerHTML=`<div class="viewhead"><h2>Gene × field</h2><p>Read it like a Scanpy dot plot: one row per gene, one column per field. Dot size shows papers; a hollow dot means only reviews support it.${focused?' Red genes have no quote from your field.':''}</p></div>
+   <div class="scroll"><svg viewBox="0 0 ${W} ${H}" style="min-width:${Math.min(W,720)}px;width:100%;max-width:${Math.round(W*1.2)}px;height:auto" role="img" aria-label="Gene by field dot plot">${s}</svg></div>
+   ${focused?legend([['var(--home)','Your field'],['var(--near)','Near'],['var(--far)','Far'],['var(--muted)','Not stated'],['var(--muted)','Reviews only','hollow']]):systemLegend(rows)}
+   ${hidden?`<p class="hint">${hidden} field${hidden===1?'':'s'} with the fewest papers left out; see the Evidence table.</p>`:''}`;
+  bindKeys($('#view'),'.dotc',el=>{const c=byField.get(el.dataset.f),g=el.dataset.g;
+    openRows({eyebrow:focused?RINGS[c.ring].label:cap(c.system),title:`${g} in ${fieldLabel(c.field)}`,rows:c.rows.filter(e=>e.matched_user_genes.includes(g)),note:(focused&&c.ring!=='home'&&!HG.has(g))?gapNote([g]):''})});
+}
+
+/* body map: front-view outline; organ marks only where evidence exists */
+const ORG_POS={brain:[300,40],eye:[288,52],retina:[288,52],'oral cavity':[300,80],'head and neck':[300,98],thyroid:[300,110],esophagus:[300,128],
+  airway:[300,140],thymus:[300,152],'lymph node':[352,122],lung:[[272,170],[328,170]],breast:[[262,150],[338,150]],heart:[312,192],'blood vessels':[340,205],
+  blood:[214,225],spleen:[262,232],liver:[324,228],stomach:[284,226],'bile duct':[316,244],pancreas:[292,252],'adrenal gland':[334,256],kidney:[[266,272],[334,272]],
+  'small intestine':[300,284],colon:[300,302],'adipose tissue':[352,300],placenta:[300,316],uterus:[300,330],ovary:[[284,330],[316,330]],bladder:[300,338],
+  prostate:[300,348],testis:[300,362],'spinal cord':[300,180],'skeletal muscle':[272,400],'bone marrow':[328,410],bone:[328,440],joint:[272,470],cartilage:[328,470],skin:[392,276]};
+function renderBodyMap(){
+  const rows=evidenceRows();
+  if(!rows.length){$('#view').innerHTML='<p class="empty">No quotes to draw yet.</p>';return}
+  const focused=MODE==='focused';
+  const years=rows.map(e=>e.publication_year).filter(Boolean);const y0=Math.min(...years),y1=Math.max(...years);
+  if(BODY_YEAR===null||BODY_YEAR<y0||BODY_YEAR>y1)BODY_YEAR=y1;
+  const upto=rows.filter(e=>!e.publication_year||e.publication_year<=BODY_YEAR);
+  const byOrgan=new Map();upto.forEach(e=>{const o=e.field&&e.field.organ;if(!o)return;if(!byOrgan.has(o))byOrgan.set(o,[]);byOrgan.get(o).push(e)});
+  const placed=[...byOrgan.entries()].filter(([o])=>ORG_POS[o]);const elsewhere=[...byOrgan.entries()].filter(([o])=>!ORG_POS[o]);
+  // labels: left column for organs left of the midline, right column otherwise; spread to avoid overlaps
+  const lab=placed.map(([o,rs])=>{const p=Array.isArray(ORG_POS[o][0])?ORG_POS[o]:[ORG_POS[o]];return{o,rs,p,side:p[0][0]<300&&p.length===1?'L':'R',y:p[0][1]}});
+  ['L','R'].forEach(side=>{let last=-99;lab.filter(l=>l.side===side).sort((a,b)=>a.y-b.y).forEach(l=>{l.ly=Math.max(l.y,last+34);last=l.ly})});
+  const order={home:0,near:1,far:2,unplaced:3};
+  let marks='';
+  lab.forEach(l=>{
+    const best=focused?l.rs.map(ringOf).sort((a,b)=>order[a]-order[b])[0]:null;
+    const sysTop=Object.entries(l.rs.reduce((m,e)=>(m[systemOf(e)]=(m[systemOf(e)]||0)+1,m),{})).sort((a,b)=>b[1]-a[1])[0][0];
+    const c=focused?RINGS[best].c:sysColor(sysTop),i=indep(l.rs),r=Math.min(16,6+3*Math.sqrt(i.papers));
+    const lx=l.side==='L'?150:450,anchor=l.side==='L'?'end':'start',edgeX=l.side==='L'?Math.min(...l.p.map(p=>p[0]))-r:Math.max(...l.p.map(p=>p[0]))+r;
+    const mouse=l.rs.some(e=>e.field&&e.field.species==='Mouse');
+    marks+=`<g class="organ" data-o="${esc(l.o)}" tabindex="0" role="button" aria-label="${esc(l.o)}: ${i.papers} papers">
+      ${l.p.map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="${r+7}" fill="${c}" fill-opacity=".18"/><circle cx="${p[0]}" cy="${p[1]}" r="${r}" fill="${c}" fill-opacity=".9"/>`).join('')}
+      <polyline points="${edgeX},${l.p[0][1]} ${l.side==='L'?lx+8:lx-8},${l.ly-4}" fill="none" stroke="var(--line)"/>
+      <text x="${lx}" y="${l.ly}" text-anchor="${anchor}" style="font-size:13px;font-weight:600">${esc(cap(l.o))}</text>
+      <text x="${lx}" y="${l.ly+14}" text-anchor="${anchor}" class="mut" style="font-size:11px">${i.papers} paper${i.papers===1?'':'s'}${mouse?' · incl. mouse':''}</text></g>`;
+  });
+  const firsts=[...new Set(rows.map(e=>e.field&&e.field.organ).filter(Boolean))].map(o=>{const rs=rows.filter(e=>e.field&&e.field.organ===o&&e.publication_year);return{o,y:rs.length?Math.min(...rs.map(e=>e.publication_year)):null,rs}}).filter(x=>x.y).sort((a,b)=>a.y-b.y);
+  $('#view').innerHTML=`<div class="viewhead"><h2>Body map</h2><p>Where these genes have been described, and when. Drag the year or press Play to watch the evidence spread between organs.</p></div>
+   <div class="bodygrid">
+    <div class="scroll"><svg id="bm" viewBox="0 0 600 540" style="width:100%;min-width:340px;height:auto" role="img" aria-label="Body map">
+     <g fill="var(--sil)"><circle cx="300" cy="50" r="34"/><rect x="286" y="80" width="28" height="26" rx="8"/><rect x="232" y="100" width="136" height="216" rx="48"/>
+      <rect x="192" y="112" width="34" height="186" rx="17" transform="rotate(8 209 112)"/><rect x="374" y="112" width="34" height="186" rx="17" transform="rotate(-8 391 112)"/>
+      <rect x="244" y="300" width="50" height="210" rx="24"/><rect x="306" y="300" width="50" height="210" rx="24"/></g>${marks}</svg></div>
+    <div>
+     <div class="slider"><span class="year">${BODY_YEAR}</span><input type="range" id="yrs" min="${y0}" max="${y1}" value="${BODY_YEAR}" aria-label="Year" ${y0===y1?'disabled':''}><button class="btn" id="play" ${y0===y1?'disabled':''}>${BODY_TIMER?'Pause':'Play'}</button></div>
+     <ul class="spread">${firsts.map(x=>`<li class="${x.y>BODY_YEAR?'future':''}"><span class="y">${x.y}</span><span>First quote from <b>${esc(cap(x.o))}</b></span></li>`).join('')}</ul>
+     ${elsewhere.length?`<p class="hint">Also: ${elsewhere.map(([o,rs])=>`${esc(o)} (${indep(rs).papers})`).join(', ')}.</p>`:''}
+     ${legend(focused?[['var(--home)','Your field'],['var(--near)','Near'],['var(--far)','Far']]:[...new Set(upto.map(systemOf))].map(s=>[sysColor(s),cap(s)]))}
+    </div></div>`;
+  $('#yrs').oninput=e=>{BODY_YEAR=+e.target.value;renderBodyMap()};
+  $('#play').onclick=()=>{
+    if(BODY_TIMER){clearInterval(BODY_TIMER);BODY_TIMER=null;renderBodyMap();return}
+    if(matchMedia('(prefers-reduced-motion: reduce)').matches){BODY_YEAR=y1;renderBodyMap();return}
+    BODY_YEAR=y0;BODY_TIMER=setInterval(()=>{if(view!=='body-map'||BODY_YEAR>=y1){clearInterval(BODY_TIMER);BODY_TIMER=null}else BODY_YEAR++;if(view==='body-map')renderBodyMap()},700);renderBodyMap()};
+  bindKeys($('#bm'),'.organ',el=>{const rs=byOrgan.get(el.dataset.o)||[];openRows({eyebrow:'Organ',title:cap(el.dataset.o),sub:`Quotes up to ${BODY_YEAR}`,rows:rs})});
+}
+let BODY_YEAR=null,BODY_TIMER=null;
+
+function renderTimeline(){
+  const rows=evidenceRows().filter(e=>e.publication_year);
+  if(!rows.length){$('#view').innerHTML='<p class="empty">No dated quotes to draw.</p>';return}
+  const focused=MODE==='focused';
+  const lanesMap=new Map();rows.forEach(e=>{const k=fieldKey(e.field);if(!lanesMap.has(k))lanesMap.set(k,{key:k,field:e.field,ring:ringOf(e),system:systemOf(e),rows:[]});lanesMap.get(k).rows.push(e)});
+  let lanes=[...lanesMap.values()].map(l=>(l.first=Math.min(...l.rows.map(e=>e.publication_year)),l));
+  lanes.sort((a,b)=>focused?(RING_ORDER.indexOf(a.ring)-RING_ORDER.indexOf(b.ring))||(a.first-b.first):(a.first-b.first));
+  const MAXL=16,hidden=Math.max(0,lanes.length-MAXL);
+  if(hidden){const keep=new Set([...lanes].sort((a,b)=>indep(b.rows).papers-indep(a.rows).papers).slice(0,MAXL).map(l=>l.key));lanes=lanes.filter(l=>keep.has(l.key))}
+  const years=rows.map(e=>e.publication_year);let y0=Math.min(...years),y1=Math.max(...years);if(y1-y0<4){y0-=2;y1+=2}
+  const L=230,R=30,W=1000,LH=38,TOP=36,H=TOP+lanes.length*LH+18,X=y=>L+(y-y0)/(y1-y0)*(W-L-R);
+  const step=y1-y0>16?4:y1-y0>8?2:1;let s='';
+  for(let y=y0;y<=y1;y++){if((y-y0)%step)continue;s+=`<line x1="${X(y)}" x2="${X(y)}" y1="${TOP-8}" y2="${H-12}" stroke="var(--line)"/><text x="${X(y)}" y="${TOP-14}" text-anchor="middle" class="mut mono" style="font-size:11px">${y}</text>`}
+  lanes.forEach((l,i)=>{const y=TOP+i*LH+LH/2,c=focused?RINGS[l.ring].c:sysColor(l.system);
+    if(focused&&l.ring==='home')s+=`<rect x="4" y="${y-LH/2+3}" width="${W-8}" height="${LH-6}" rx="6" fill="var(--home)" fill-opacity=".08"/>`;
+    s+=`<text x="${L-14}" y="${y+4}" text-anchor="end" style="font-size:12.5px;font-weight:${focused&&l.ring==='home'?700:500}">${esc(trunc(fieldLabel(l.field),30))}</text>`;
+    const papers=[...new Map(l.rows.map(e=>[e.pmid,e])).values()].sort((a,b)=>a.publication_year-b.publication_year);
+    const seen={},firstP=papers.find(isPrimary);
+    papers.forEach(p=>{seen[p.publication_year]=(seen[p.publication_year]||0)+1;const x=X(p.publication_year)+(seen[p.publication_year]-1)*12;
+      s+=`<circle class="tp" data-l="${esc(l.key)}" data-p="${esc(p.pmid)}" tabindex="0" role="button" cx="${x}" cy="${y}" r="7" fill="${isPrimary(p)?c:'var(--surface)'}" stroke="${c}" stroke-width="2" ${p.is_preprint?'stroke-dasharray="2 2"':''}><title>PMID ${esc(p.pmid)} · ${p.publication_year}${isPrimary(p)?'':' · review'}${p.is_preprint?' · preprint':''}</title></circle>`;
+      if(p===firstP)s+=`<text x="${x}" y="${y-11}" text-anchor="middle" style="font-size:10px;font-weight:600;fill:${c}">first</text>`});
+  });
+  $('#view').innerHTML=`<div class="viewhead"><h2>Timeline</h2><p>When each field reported these genes. One dot per paper; "first" marks the earliest primary study in that field.</p></div>
+   <div class="scroll"><svg id="tl" viewBox="0 0 ${W} ${H}" style="min-width:720px;width:100%;height:auto" role="img" aria-label="Timeline">${s}</svg></div>
+   ${legend([[focused?'var(--home)':'var(--s1)','Primary study'],['var(--muted)','Review','hollow']])}
+   ${hidden?`<p class="hint">${hidden} field${hidden===1?'':'s'} with the fewest papers left out; see the Evidence table.</p>`:''}`;
+  bindKeys($('#tl'),'.tp',el=>{const l=lanesMap.get(el.dataset.l);openRows({eyebrow:fieldLabel(l.field),title:`PMID ${el.dataset.p}`,rows:l.rows.filter(e=>e.pmid===el.dataset.p)})});
+}
+
 /* ---------- start ---------- */
 (async()=>{
   const last=store.get('maples:last');
@@ -514,8 +799,8 @@ function download(name,text,type){
   try{SET=await api('/api/settings')}catch(e){SET=null}
   renderChip();
   if(SET&&!SET.has_llm_key){fillSettings();$('#settings').showModal()}
-  const m=location.hash.match(/^#run-([a-f0-9]+)$/);
-  if(m){$('#runBtn').disabled=true;poll(m[1])}
+  const m=location.hash.match(/^#run-([a-f0-9]+)(?:\/([a-z-]+))?(?:\/(focused|agnostic))?$/);
+  if(m){WANT={view:m[2],mode:m[3]};RUN_ID=m[1];$('#runBtn').disabled=true;poll(m[1])}
 })();
 </script>
 </body>
