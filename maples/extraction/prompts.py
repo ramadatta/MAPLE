@@ -3,7 +3,7 @@ from __future__ import annotations
 
 # Bump when prompt wording/schema-shaping changes. Recorded in run provenance so
 # results are traceable to the exact prompt version that produced them.
-PROMPT_VERSION = "1.1"
+PROMPT_VERSION = "1.2"
 
 # ---- Evidence Extraction Prompt ----
 
@@ -31,7 +31,8 @@ For each association return an object with:
 1. celltype_label   — the cell type/state exactly as the paper names it.
 2. normalized_label — a lowercase canonical form for grouping equivalent names across papers \
 (e.g. "at2 cell", "alveolar type II epithelial cell" -> "alveolar type 2 cell").
-3. matched_user_genes — ALL the user genes (from the list above) that the paper attributes to \
+3. matched_user_genes — ALL the user genes (from the list above, written with the symbols as \
+listed even when the paper uses a name shown in brackets, e.g. "TP63" for "p63") that the paper attributes to \
 THIS cell type, even when they are listed across several adjacent sentences or separate marker \
 lists (e.g. basal markers in one sentence, EMT markers in the next, senescence markers in a third).
 4. evidence_snippet — text copied EXACTLY from the paper, character-for-character (same words, \

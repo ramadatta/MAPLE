@@ -49,7 +49,7 @@ def _no_env_llm(monkeypatch):
 
 
 def _patch_pipeline(monkeypatch, capture=None, raise_for=None):
-    async def fake(analysis_input, llm=None, progress_callback=None):
+    async def fake(analysis_input, llm=None, progress_callback=None, partial_callback=None):
         if capture is not None:
             capture["input"] = analysis_input
         if raise_for is not None and set(analysis_input.markers) == set(raise_for):

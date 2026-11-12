@@ -156,6 +156,10 @@ svg .ringlbl{font-size:11px;letter-spacing:.1em;font-weight:600}
 .qcard{all:unset;cursor:pointer;display:grid;gap:4px;border:1px solid var(--line);border-left:4px solid var(--c);border-radius:8px;padding:8px 10px;box-sizing:border-box}
 .qcard:hover{background:var(--sunken)} .qcard:focus-visible{outline:2px solid var(--far)}
 .qcard .qq{font-size:13px;line-height:1.5} .qcard .qm{font-size:12px;color:var(--muted)}
+.live{display:grid;gap:6px;margin-top:10px}
+.live .lc{font-size:13px;font-weight:600}
+.live .lq{font-size:12.5px;border-left:3px solid var(--home);padding:2px 0 2px 8px;color:var(--ink)}
+.live .lq span{color:var(--muted)}
 .kind{display:inline-block;font-size:11px;font-weight:600;padding:0 6px;border-radius:4px;border:1px solid var(--c);color:var(--c);margin:2px 4px 0 0}
 .indep{background:var(--sunken);border-radius:10px;padding:10px 12px;font-size:13.5px}
 .indep b{font-variant-numeric:tabular-nums}
@@ -204,6 +208,7 @@ svg .ringlbl{font-size:11px;letter-spacing:.1em;font-weight:600}
     <div class="phead"><h3 id="ptitle">Running</h3><span class="t" id="ptime"></span></div>
     <ol id="pstages"></ol>
     <p class="hint" id="pdetail"></p>
+    <div class="live" id="plive" hidden></div>
   </section>
 
   <div class="work" id="results" hidden>
@@ -363,10 +368,16 @@ function showProgress(job){
     return `<li class="${st}"><span class="dotst">${st==='done'?'✓':''}</span>${esc(s)}</li>`}).join('');
   $('#pdetail').textContent=job.status==='error'?job.error:job.status==='running'?job.detail:'';
   $('#pdetail').className=job.status==='error'?'hint err':'hint';
+  const lv=job.live||{},box=$('#plive');
+  if(job.status==='running'&&lv.papers_total){
+    box.hidden=false;
+    box.innerHTML=`<div class="lc">Read ${lv.papers_done} of ${lv.papers_total} papers · ${lv.quotes} quote${lv.quotes===1?'':'s'} so far</div>`+
+      (lv.recent||[]).map(q=>`<div class="lq"><b>${esc(q.celltype_label)}</b> <span>(${esc(q.genes.join(', '))} · PMID ${esc(q.pmid)}${q.year?' · '+q.year:''})</span><br>${hl(q.snippet)}${q.snippet.length>=200?'…':''}</div>`).join('');
+  }else box.hidden=true;
 }
 async function poll(id){
   try{
-    const job=await api('/api/run/'+id);showProgress(job);
+    const job=await api('/api/run/'+id);if(job.status==='running')GENES=job.genes;showProgress(job);
     if(job.status==='running'){setTimeout(()=>poll(id),1000);return}
     $('#runBtn').disabled=false;
     if(job.status==='done'){RESULT=job.result;GENES=job.genes;T.genes=new Set();T.q='';T.type='';T.system='';T.rings=new Set(RING_ORDER);sel=null;LIST=null;BODY_YEAR=null;view=WANT.view||'summary';MODE=(WANT.mode==='agnostic'||!RESULT.home_field)?'agnostic':(WANT.mode||'focused');WANT={};renderResults();setRunHash(id)}
@@ -375,8 +386,9 @@ async function poll(id){
 
 /* ---------- results ---------- */
 function hl(text){
-  if(!GENES.length)return esc(text);
-  const re=new RegExp('\\b('+GENES.map(g=>g.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|')+')\\b','gi');
+  const names=[...GENES,...Object.values((RESULT&&RESULT.gene_aliases)||{}).flat()].filter(Boolean).sort((a,b)=>b.length-a.length);
+  if(!names.length)return esc(text);
+  const re=new RegExp('(?<![A-Za-z0-9])('+names.map(g=>esc(g).replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|')+')(?![A-Za-z0-9])','gi');
   return esc(text).replace(re,'<mark>$1</mark>');
 }
 const pubmed=p=>`https://pubmed.ncbi.nlm.nih.gov/${encodeURIComponent(p)}/`;

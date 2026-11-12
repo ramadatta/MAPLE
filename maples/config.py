@@ -13,13 +13,20 @@ LLM_EXTRACTION_MAX_PAPERS = int(os.getenv("MAPLE_LLM_EXTRACTION_MAX_PAPERS", "25
 # Per-paper LLM extraction calls run concurrently in a bounded thread pool.
 # This is the single biggest latency lever (was fully serial). Raise if your
 # LLM provider tolerates more parallel requests; lower if you hit rate limits.
-EVIDENCE_EXTRACTION_CONCURRENCY = int(os.getenv("MAPLE_EVIDENCE_EXTRACTION_CONCURRENCY", "12"))
+# Default reads the whole budget (25 papers) in one round; measured on Blablador this
+# cut the reading step from ~53 s to ~33 s. Lower it if your provider rate-limits.
+EVIDENCE_EXTRACTION_CONCURRENCY = int(os.getenv("MAPLE_EVIDENCE_EXTRACTION_CONCURRENCY", "25"))
 # Full-text fetches (PMC/EPMC/preprint) run concurrently, but NCBI PMC calls are
 # throttled by a shared rate limiter — keep this modest to respect NCBI's limits
 # (especially on shared hosts like HF Spaces). ~4 is safe with an NCBI API key.
 FULLTEXT_FETCH_CONCURRENCY = int(os.getenv("MAPLE_FULLTEXT_FETCH_CONCURRENCY", "4"))
-# Characters of PMC full text handed to the LLM extractor per paper.
+# Characters of PMC full text handed to the LLM extractor per paper (legacy cap,
+# used only when passage selection is switched off).
 LLM_FULLTEXT_CHARS = int(os.getenv("MAPLE_LLM_FULLTEXT_CHARS", "14000"))
+# Instead of the first N characters, send the passages that mention the user's
+# genes (results, figure legends, tables), up to this many characters.
+ENABLE_PASSAGE_SELECTION = os.getenv("MAPLE_ENABLE_PASSAGE_SELECTION", "true").lower() not in ("0", "false", "no")
+LLM_PASSAGE_CHARS = int(os.getenv("MAPLE_LLM_PASSAGE_CHARS", "8000"))
 TABLE_PAGE_SIZE = int(os.getenv("MAPLE_TABLE_PAGE_SIZE", "25"))
 
 # --- Preprint (bioRxiv/medRxiv) full-text source ---

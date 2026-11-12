@@ -61,7 +61,11 @@ def _paper_text(paper: RetrievedPaper) -> str:
 
 
 def _find_user_genes_in_text(user_genes: list[str], text: str) -> list[str]:
-    return validate_genes_in_text(user_genes, text)
+    """User genes present in the text under their symbol or a known alias
+    (case-insensitive, so mouse spellings like "Krt17" count)."""
+    from maples.genes import genes_in_text
+
+    return genes_in_text(user_genes, text)
 
 
 def _build_context_match(
@@ -130,18 +134,27 @@ def _llm_extract(
     if not found_genes:
         return []
 
+    from maples.genes import canonical_symbol, describe_for_prompt, gene_in_text
+
     fulltext_section = ""
     if paper.full_text:
-        fulltext_section = EVIDENCE_EXTRACTION_FULLTEXT_PLACEHOLDER.format(
-            full_text=paper.full_text[: cfg.LLM_FULLTEXT_CHARS]
-        )
+        if cfg.ENABLE_PASSAGE_SELECTION:
+            from maples.extraction.passages import select_passages
 
+            excerpt, _stats = select_passages(paper.full_text, found_genes, cfg.LLM_PASSAGE_CHARS)
+        else:
+            excerpt = paper.full_text[: cfg.LLM_FULLTEXT_CHARS]
+        fulltext_section = EVIDENCE_EXTRACTION_FULLTEXT_PLACEHOLDER.format(full_text=excerpt)
+
+    # Only the genes this paper actually mentions go into the prompt: a shorter,
+    # more focused prompt, and the same paper + genes reuse the cached answer
+    # across different panels.
     user_prompt = EVIDENCE_EXTRACTION_USER_TEMPLATE.format(
         pmid=paper.pmid,
         title=paper.title or "",
         abstract=(paper.abstract or "")[:3000],
         fulltext_section=fulltext_section,
-        genes=", ".join(user_genes),
+        genes=describe_for_prompt(found_genes),
     )
 
     try:
@@ -154,7 +167,6 @@ def _llm_extract(
         logger.warning("LLM extraction failed for PMID %s: %s", paper.pmid, exc)
         return []
 
-    user_upper = {u.upper(): u for u in user_genes}
     context = _build_context_match(paper, analysis_input)
     rows: list[EvidenceRow] = []
 
@@ -165,8 +177,8 @@ def _llm_extract(
             continue
 
         # Genes must be a subset of the user's panel.
-        valid_genes = [user_upper[g.upper()] for g in raw.matched_user_genes if g.upper() in user_upper]
-        valid_genes = list(dict.fromkeys(valid_genes))
+        valid_genes = [canonical_symbol(g, user_genes) for g in raw.matched_user_genes]
+        valid_genes = list(dict.fromkeys(g for g in valid_genes if g))
         if not valid_genes:
             continue
 
@@ -180,7 +192,7 @@ def _llm_extract(
         # Keep only the genes that literally appear in the quoted passage, rather
         # than rejecting the whole row — this preserves a multi-sentence marker
         # panel while dropping any gene the quote does not actually support.
-        valid_genes = [g for g in valid_genes if validate_genes_in_snippet([g], snippet)]
+        valid_genes = [g for g in valid_genes if gene_in_text(g, snippet)]
         if not valid_genes:
             continue
 
@@ -251,8 +263,13 @@ def run_evidence_agent(
     analysis_input: AnalysisInput,
     retrieval_result: RetrievalResult,
     llm=None,
+    on_progress=None,
 ) -> ExtractionResult:
-    """Extract EvidenceRow objects from retrieved papers using the LLM."""
+    """Extract EvidenceRow objects from retrieved papers using the LLM.
+
+    ``on_progress(papers_done, papers_total, new_rows)`` is called after each paper
+    is read, so callers can show results as they arrive. It must be quick and
+    must not raise; errors in it are ignored."""
     user_genes = analysis_input.markers
     papers = retrieval_result.retrieved_papers
     audit_notes: list[str] = []
@@ -337,7 +354,7 @@ def run_evidence_agent(
                 pool.submit(_llm_extract, paper, user_genes, analysis_input, llm): idx
                 for idx, paper in enumerate(eligible)
             }
-            for future in as_completed(future_map):
+            for done, future in enumerate(as_completed(future_map), 1):
                 idx = future_map[future]
                 try:
                     results[idx] = future.result()
@@ -346,6 +363,11 @@ def run_evidence_agent(
                         "LLM extraction error for PMID %s: %s", eligible[idx].pmid, exc
                     )
                     results[idx] = []
+                if on_progress is not None:
+                    try:
+                        on_progress(done, len(eligible), results[idx])
+                    except Exception:  # progress display must never break extraction
+                        pass
     llm_used = len(eligible)
 
     # ── Pass 3: aggregate in stable paper order ──────────────────────────────────

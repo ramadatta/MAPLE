@@ -17,6 +17,7 @@ async def run_maple_pipeline(
     analysis_input: AnalysisInput,
     llm=None,
     progress_callback: Optional[ProgressCallback] = None,
+    partial_callback: Optional[Callable[[int, int, list], None]] = None,
 ) -> AnalysisState:
     """
     Run all 5 MAPLE agents in sequence.
@@ -36,9 +37,17 @@ async def run_maple_pipeline(
         count = len(state.retrieval.retrieved_papers)
         add_audit(state, "Retrieval", f"Retrieved {count} papers", "; ".join(state.retrieval.audit_notes[:3]))
 
-        await step("Evidence Extraction", f"Extracting marker-to-celltype associations from {count} papers…")
+        from maples import config as cfg
+
+        await step(
+            "Evidence Extraction",
+            f"Found {count} candidate papers; reading up to {min(count, cfg.LLM_EXTRACTION_MAX_PAPERS)} "
+            "that mention your genes…",
+        )
         from maples.runtime.evidence_agent import run_evidence_agent
-        state.extraction = await asyncio.to_thread(run_evidence_agent, state.input, state.retrieval, llm)
+        state.extraction = await asyncio.to_thread(
+            run_evidence_agent, state.input, state.retrieval, llm, partial_callback
+        )
         row_count = len(state.extraction.evidence_rows)
         add_audit(state, "Evidence", f"Found {row_count} evidence rows", "; ".join(state.extraction.audit_notes[:3]))
 

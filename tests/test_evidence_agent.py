@@ -359,3 +359,32 @@ def test_backfill_fills_types_and_authors_from_pubmed():
     assert _backfill_pubmed_metadata(papers, SimpleNamespace(backend=Backend())) == 1
     assert papers[0].publication_types == ["Journal Article", "Review"]
     assert papers[0].authors[-1] == "Jun Araya" and papers[0].doi == "10.1/x"
+
+
+def test_aliases_in_paper_and_model_output_map_to_user_symbols():
+    from maples.extraction.schemas import _LLMEvidenceOutput, _LLMEvidenceRow
+
+    class LLM:
+        def __init__(self):
+            self.prompt = ""
+
+        def complete_json(self, system, user, schema):
+            self.prompt = user
+            return _LLMEvidenceOutput(rows=[_LLMEvidenceRow(
+                celltype_label="basal cells", normalized_label="basal cell",
+                matched_user_genes=["p63", "Krt5"],
+                evidence_snippet="p63+ Krt5+ basal cells line the airway",
+                evidence_type="direct_marker_celltype_assignment", match_strength="High",
+                evidence_section="results")])
+
+    paper = RetrievedPaper(pmid="9", title="Airway basal cells in mice",
+                           abstract="p63+ Krt5+ basal cells line the airway of mice.")
+    retrieval = RetrievalResult(retrieved_papers=[paper])
+    llm = LLM()
+    calls = []
+    result = run_evidence_agent(AnalysisInput(markers=["TP63", "KRT5", "SOX4"]), retrieval, llm,
+                                on_progress=lambda d, t, rows: calls.append((d, t, len(rows))))
+    assert result.evidence_rows[0].matched_user_genes == ["TP63", "KRT5"]
+    assert "SOX4" not in llm.prompt.split("User-provided marker genes:")[1].splitlines()[0]
+    assert "TP63 (may appear as p63" in llm.prompt
+    assert calls == [(1, 1, 1)]

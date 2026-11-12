@@ -44,7 +44,8 @@ jobs:
             tests/test_settings_and_web.py \
             tests/test_fields.py \
             tests/test_label_agent.py \
-            tests/test_independence.py
+            tests/test_independence.py \
+            tests/test_genes_and_passages.py
 
       - name: Check the command line installs
         run: maples --version

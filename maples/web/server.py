@@ -66,6 +66,10 @@ class Job:
         self.finished: Optional[float] = None
         self.result: Optional[dict[str, Any]] = None
         self.error: Optional[str] = None
+        # Live view while papers are read: counts plus the latest quotes.
+        self.papers_done = 0
+        self.papers_total = 0
+        self.live_rows: list[dict[str, Any]] = []
 
     def to_dict(self) -> dict[str, Any]:
         end = self.finished or time.time()
@@ -77,6 +81,12 @@ class Job:
             "stage_index": self.stage_index,
             "detail": self.detail,
             "elapsed_seconds": round(end - self.started, 1),
+            "live": {
+                "papers_done": self.papers_done,
+                "papers_total": self.papers_total,
+                "quotes": len(self.live_rows),
+                "recent": self.live_rows[-6:][::-1],
+            },
             "result": self.result,
             "error": self.error,
         }
@@ -195,6 +205,20 @@ def create_app() -> FastAPI:
             job.stage_index = _STAGE_INDEX.get(label, job.stage_index)
             job.detail = detail
 
+        def partial(done: int, total: int, rows: list) -> None:
+            # Called from a worker thread; only simple attribute updates here.
+            job.papers_done, job.papers_total = done, total
+            job.live_rows.extend(
+                {
+                    "celltype_label": r.celltype_label,
+                    "genes": list(r.matched_user_genes),
+                    "pmid": r.pmid,
+                    "year": r.publication_year,
+                    "snippet": r.evidence_snippet[:200],
+                }
+                for r in rows
+            )
+
         async def run() -> None:
             from maples.api import annotate_async
 
@@ -207,6 +231,7 @@ def create_app() -> FastAPI:
                     llm=llm,
                     include_raw_state=True,
                     progress_callback=progress,
+                    partial_callback=partial,
                 )
                 job.result = _result_payload(result)
                 job.status = "done"

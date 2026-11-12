@@ -34,6 +34,7 @@ from typing import Awaitable, Mapping, Optional, Sequence, TypeVar, Union
 from pydantic import BaseModel, Field
 
 from maples.fields import FieldContext
+from maples.genes import aliases as _aliases
 from maples.models import AnalysisInput, AnalysisState, ConsensusAlternative, EvidenceRow, LabelGroup
 
 __all__ = [
@@ -111,6 +112,8 @@ class AnnotationResult(BaseModel):
     # Counts of primary papers, reviews, preprints and independent sources
     # (papers sharing a dataset or a lab count once).
     independence: dict = Field(default_factory=dict)
+    # Other names the paper may use for each input gene ("p63" for TP63).
+    gene_aliases: dict[str, list[str]] = Field(default_factory=dict)
     warnings: list[str] = Field(default_factory=list)
     run_metadata: RunMetadata = Field(default_factory=RunMetadata)
     # Full internal pipeline state — only populated when include_raw_state=True.
@@ -213,6 +216,7 @@ def _state_to_result(
         evidence=evidence,
         alternatives=list(consensus.alternative_labels) if consensus else [],
         home_field=state.home_field,
+        gene_aliases={g: list(_aliases(g)) for g in state.input.markers if _aliases(g)},
         label_groups=list(state.label_groups),
         independence=dict(state.independence),
         warnings=warnings,
@@ -247,6 +251,7 @@ async def annotate_async(
     llm=None,
     include_raw_state: bool = False,
     progress_callback=None,
+    partial_callback=None,
 ) -> AnnotationResult:
     """
     Annotate one marker set against the literature. Canonical (async) entry point.
@@ -259,6 +264,8 @@ async def annotate_async(
             (no evidence extraction).
         include_raw_state: attach the full internal AnalysisState to the result.
         progress_callback: optional async callback(label, detail) for progress.
+        partial_callback: optional sync callback(papers_done, papers_total, new_rows)
+            called from a worker thread as each paper is read.
 
     Returns:
         AnnotationResult
@@ -281,7 +288,8 @@ async def annotate_async(
     from maples.runtime.orchestrator import run_maple_pipeline
 
     state = await run_maple_pipeline(
-        analysis_input, llm=llm, progress_callback=progress_callback
+        analysis_input, llm=llm, progress_callback=progress_callback,
+        partial_callback=partial_callback,
     )
     return _state_to_result(state, llm, include_raw_state)
 
