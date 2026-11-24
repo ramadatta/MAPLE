@@ -2,7 +2,7 @@
 
 OpenAlex indexes full text and preprints, so its ``fulltext.search`` filter finds
 papers whose marker genes appear only in the body (missed by abstract search).
-It is a *finder*: results are returned with DOI/PMID/PMCID so MAPLE's existing
+It is a *finder*: results are returned with DOI/PMID/PMCID so MAPLES's existing
 PMC/bioRxiv reader can fetch the actual evidence text.
 """
 from __future__ import annotations
@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 OPENALEX_WORKS_URL = "https://api.openalex.org/works"
 REQUEST_TIMEOUT = 20
 RATE_LIMIT_SECONDS = 0.12
-_HEADERS = {"User-Agent": "MAPLE/1.0 (research copilot; +https://openalex.org)"}
+_HEADERS = {"User-Agent": "MAPLES/1.0 (research copilot; +https://openalex.org)"}
 
 
 def _clean_doi(value: str) -> str:

@@ -1,12 +1,12 @@
-"""Tests for MAPLE HTML UI components."""
+"""Tests for MAPLES HTML UI components."""
 
 from maples.utils.ui_components import render_report_html, welcome_hero
 
 
 def test_welcome_hero_contains_branding():
     html = welcome_hero()
-    assert ">MAPLE<" in html
-    assert "Marker-based Annotation with PubMed Literature Evidence" in html
+    assert ">MAPLES<" in html
+    assert "Mapping Analogous Programs from Literature Evidence across Species, organs and diseases" in html
     assert "maple-composer-anchor" in html
     assert "evidence table" in html.lower()
     # Example use cases and author credit are present.

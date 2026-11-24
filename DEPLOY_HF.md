@@ -26,7 +26,7 @@ This folder isn't a git repo yet. From inside `celltype_annotator/`:
 ```bash
 git init
 git add .
-git commit -m "MAPLE initial deploy"
+git commit -m "MAPLES initial deploy"
 git remote add space https://huggingface.co/spaces/<you>/maple
 git push space main    # (or 'master' — match your branch; use --force the first time if HF made an initial commit)
 ```
@@ -65,5 +65,5 @@ When it says *Running*, open the Space URL. Every `git push` redeploys.
   use, switch the Space to **Private** (Settings → change visibility) or set
   `USE_ENV_TOKEN_ONLY=false` so users must paste their own token.
 - **Sleep:** free Spaces sleep when idle and wake on the next visit (first load
-  is slower). The disk cache resets on rebuild — MAPLE just re-fetches.
+  is slower). The disk cache resets on rebuild — MAPLES just re-fetches.
 - **Rotate the Smithery key** that appeared earlier in logs; it isn't used here.

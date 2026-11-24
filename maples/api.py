@@ -1,6 +1,6 @@
-"""Public programmatic API for MAPLE.
+"""Public programmatic API for MAPLES.
 
-Import this to run MAPLE from a script, notebook, or another service without the
+Import this to run MAPLES from a script, notebook, or another service without the
 Chainlit UI:
 
     from maples import annotate

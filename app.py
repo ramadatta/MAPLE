@@ -1,5 +1,5 @@
 """
-MAPLE — Marker-based Annotation with PubMed Literature Evidence.
+MAPLES — Mapping Analogous Programs from Literature Evidence across Species, organs and diseases.
 Chainlit application entry point (v2 — maple pipeline).
 """
 
@@ -154,7 +154,7 @@ def _context_note(analysis_input: AnalysisInput) -> str:
 # ─── Pipeline runner ──────────────────────────────────────────────────────────
 
 async def _run_pipeline(analysis_input: AnalysisInput) -> None:
-    """Obtain API key, run MAPLE pipeline, store state and render results."""
+    """Obtain API key, run MAPLES pipeline, store state and render results."""
 
     # 1 — API key
     api_key = await _ask_api_key()
@@ -226,7 +226,7 @@ async def _run_pipeline(analysis_input: AnalysisInput) -> None:
             progress_callback=step_callback,
         )
     except Exception as exc:
-        logger.error("MAPLE pipeline error: %s", exc, exc_info=True)
+        logger.error("MAPLES pipeline error: %s", exc, exc_info=True)
         await progress.finish()
         await cl.Message(
             content=f"Pipeline error: {exc}. Please check your API key and try again."
@@ -382,7 +382,7 @@ async def on_message(message: cl.Message) -> None:
                 "- `[\"COL1A1\", \"COL3A1\", \"POSTN\", \"DCN\"]`\n\n"
                 "**Optional context** to focus the search — just say it naturally:\n"
                 "- `COL1A1, COL3A1, POSTN, DCN — focus on lung, IPF`\n\n"
-                "Context is optional; without it MAPLE searches all of PubMed.\n\n"
+                "Context is optional; without it MAPLES searches all of PubMed.\n\n"
                 "⚠️ Research use only — not a clinical or diagnostic tool."
             )
         ).send()

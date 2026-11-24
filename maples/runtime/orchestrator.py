@@ -1,4 +1,4 @@
-"""MAPLE runtime orchestrator — runs all 5 agents sequentially."""
+"""MAPLES runtime orchestrator — runs all 5 agents sequentially."""
 from __future__ import annotations
 
 import asyncio
@@ -20,7 +20,7 @@ async def run_maple_pipeline(
     partial_callback: Optional[Callable[[int, int, list], None]] = None,
 ) -> AnalysisState:
     """
-    Run all 5 MAPLE agents in sequence.
+    Run all 5 MAPLES agents in sequence.
 
     progress_callback(label, detail) is awaited before each agent to update the UI.
     """
@@ -133,7 +133,7 @@ async def run_maple_pipeline(
         )
 
     except Exception as exc:
-        logger.error("MAPLE pipeline error: %s", exc, exc_info=True)
+        logger.error("MAPLES pipeline error: %s", exc, exc_info=True)
         state.errors.append(f"Pipeline error: {exc}")
         add_audit(state, "Error", str(exc))
 

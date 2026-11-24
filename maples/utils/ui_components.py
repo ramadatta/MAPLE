@@ -1,4 +1,4 @@
-"""HTML UI components for the MAPLE Chainlit interface."""
+"""HTML UI components for the MAPLES Chainlit interface."""
 
 from __future__ import annotations
 
@@ -48,10 +48,10 @@ def welcome_hero() -> str:
         <path d="M16 4c-1.2 4.8-4.8 7.2-9.6 8.4 4.8 1.2 7.2 4.8 8.4 9.6 1.2-4.8 4.8-7.2 9.6-8.4C20.8 11.2 17.2 8.8 16 4Z" fill="currentColor"/>
       </svg>
     </div>
-    <h1 class="maple-landing-title">MAPLE</h1>
-    <p class="maple-landing-expansion">Marker-based Annotation with PubMed Literature Evidence</p>
+    <h1 class="maple-landing-title">MAPLES</h1>
+    <p class="maple-landing-expansion">Mapping Analogous Programs from Literature Evidence across Species, organs and diseases</p>
     <p class="maple-landing-subtitle">
-      Enter marker genes and MAPLE finds which cell types the literature already
+      Enter marker genes and MAPLES finds which cell types the literature already
       annotates them to. The evidence table is the result.
     </p>
     <div id="maple-composer-anchor" class="maple-composer-anchor" aria-hidden="true"></div>

@@ -1,4 +1,4 @@
-"""Render the MAPLE Reasoning Trace as HTML."""
+"""Render the MAPLES Reasoning Trace as HTML."""
 from __future__ import annotations
 
 import html as _html
@@ -99,7 +99,7 @@ def render_audit_trail_html(state: AnalysisState) -> str:
 
     return f"""<div class="maple-audit-trail maple-animate">
   <div class="maple-audit-header">
-    <span class="maple-audit-title">MAPLE Reasoning Trace</span>
+    <span class="maple-audit-title">MAPLES Reasoning Trace</span>
   </div>
   <hr class="maple-audit-rule">
   <div class="maple-audit-entries">

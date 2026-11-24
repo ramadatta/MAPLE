@@ -1,4 +1,4 @@
-"""LLM prompt templates for MAPLE evidence extraction and consensus."""
+"""LLM prompt templates for MAPLES evidence extraction and consensus."""
 from __future__ import annotations
 
 # Bump when prompt wording/schema-shaping changes. Recorded in run provenance so
@@ -130,7 +130,7 @@ Devil's Advocate critique:
 Recommended confidence adjustment: {adjustment}
 
 Instructions:
-- MAPLE is a discovery tool: summarize where markers are annotated in the literature.
+- MAPLES is a discovery tool: summarize where markers are annotated in the literature.
 - If different genes or papers support DIFFERENT cell types, prefer the label \
 "Multiple cell types in literature" and list the main alternatives — do NOT force a single \
 cell type when the panel spans lineages or tissues.

@@ -67,7 +67,7 @@
       })
       .catch(function (err) {
         delete table.dataset.mapleDtInit;
-        console.warn("MAPLE DataTables init failed:", err);
+        console.warn("MAPLES DataTables init failed:", err);
       });
   }
 
@@ -142,7 +142,7 @@
     if (textarea) {
       textarea.placeholder = isLanding
         ? "Paste marker genes — e.g. COL1A1, COL3A1, POSTN, DCN"
-        : "Message MAPLE…";
+        : "Message MAPLES…";
     }
   }
 

@@ -1,4 +1,4 @@
-"""HTML components for the MAPLE UI."""
+"""HTML components for the MAPLES UI."""
 from __future__ import annotations
 
 import html as _html

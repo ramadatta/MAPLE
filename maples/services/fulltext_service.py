@@ -110,7 +110,7 @@ class EuropePMCService:
     ) -> list[PubMedPaper]:
         """Search Europe PMC for full-text-readable papers (relevance-ranked).
 
-        By default this restricts to Europe PMC open-access records. MAPLE full-text
+        By default this restricts to Europe PMC open-access records. MAPLES full-text
         discovery can set ``open_access_only=False`` to include author manuscripts
         that are in PMC and readable through NCBI even when Europe PMC does not
         mark them OPEN_ACCESS:Y.

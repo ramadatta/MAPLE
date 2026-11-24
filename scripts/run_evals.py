@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-MAPLE evaluation runner.
+MAPLES evaluation runner.
 
 Run with:
     python -m scripts.run_evals
@@ -96,7 +96,7 @@ async def run_case(name: str, inp: AnalysisInput, llm=None) -> dict:
 
 
 async def main():
-    parser = argparse.ArgumentParser(description="MAPLE evaluation runner")
+    parser = argparse.ArgumentParser(description="MAPLES evaluation runner")
     parser.add_argument(
         "--case", default="all", choices=list(EVAL_CASES.keys()) + ["all"]
     )

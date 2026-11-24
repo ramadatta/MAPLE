@@ -22,30 +22,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e ".[dev]"
 
-      - name: Run unit tests (offline)
-        # Deterministic, network-free tests. Live-retrieval tests that hit
-        # PubMed/NCBI are excluded here to keep CI fast and non-flaky.
-        run: |
-          pytest -q \
-            tests/test_api.py \
-            tests/test_gene_parser.py \
-            tests/test_input_parser.py \
-            tests/test_bulk_input_parser.py \
-            tests/test_models.py \
-            tests/test_table.py \
-            tests/test_ui_components.py \
-            tests/test_markdown_safe.py \
-            tests/test_evidence_signals.py \
-            tests/test_evidence_agent.py \
-            tests/test_candidate_agent.py \
-            tests/test_consensus_agent.py \
-            tests/test_validators.py \
-            tests/test_llm_provider.py \
-            tests/test_settings_and_web.py \
-            tests/test_fields.py \
-            tests/test_label_agent.py \
-            tests/test_independence.py \
-            tests/test_genes_and_passages.py
-
-      - name: Check the command line installs
-        run: maples --version
+      - name: Run the test suite (offline)
+        # Every test is network-free: PubMed, Europe PMC, OpenAlex and the AI
+        # service are mocked or switched off in tests/conftest.py.
+        run: pytest -q

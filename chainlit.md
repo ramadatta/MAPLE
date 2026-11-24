@@ -1,8 +1,8 @@
-# MAPLE — Marker-based Annotation with PubMed Literature Evidence
+# MAPLES — Mapping Analogous Programs from Literature Evidence across Species, organs and diseases
 
 **Annotate single-cell marker genes with PubMed-backed cell-type evidence.**
 
-Paste your marker genes and MAPLE will:
+Paste your marker genes and MAPLES will:
 
 1. Search PubMed for papers describing those genes
 2. Detect every cell type named in each paper
@@ -26,7 +26,7 @@ Species: Human
 Disease: pulmonary fibrosis
 ```
 
-**Tissue, Species, and Disease are all optional.** When omitted MAPLE searches all available literature.
+**Tissue, Species, and Disease are all optional.** When omitted MAPLES searches all available literature.
 
 ---
 

@@ -1,4 +1,4 @@
-"""Rule-based evidence signal scoring for MAPLE Phase 1.
+"""Rule-based evidence signal scoring for MAPLES Phase 1.
 
 Scores text chunks by marker-to-celltype assignment language rather than
 gene mention count alone.

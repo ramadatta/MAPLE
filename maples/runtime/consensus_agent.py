@@ -1,6 +1,6 @@
 """Consensus Agent — produces the final ConsensusResult.
 
-MAPLE is a literature-discovery tool: show where marker genes are already
+MAPLES is a literature-discovery tool: show where marker genes are already
 annotated to cell types across papers (tissues/diseases come from the papers,
 not from user-provided context). Do not steer results toward one disease context.
 """

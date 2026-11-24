@@ -51,7 +51,9 @@ all = ["mcp>=1.0", "chainlit>=1.0", "anndata>=0.8", "scanpy>=1.9"]
 maples = "maples.cli:main"
 
 [project.urls]
-Homepage = "https://huggingface.co/spaces/ramadatta88/MAPLE"
+Homepage = "https://github.com/ramadatta/MAPLES"
+Repository = "https://github.com/ramadatta/MAPLES"
+"Live demo" = "https://huggingface.co/spaces/ramadatta88/MAPLE"
 
 [tool.setuptools.packages.find]
 where = ["."]

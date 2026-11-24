@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────────────────────────────────────
-   MAPLE — Claude light theme (warm cream canvas · terracotta accent)
+   MAPLES — Claude light theme (warm cream canvas · terracotta accent)
    ───────────────────────────────────────────────────────────────────────────── */
 
 @import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap");
@@ -309,7 +309,7 @@ hr,
   border-color: var(--maple-border) !important;
 }
 
-/* ── MAPLE custom components ───────────────────────────────────────────────── */
+/* ── MAPLES custom components ───────────────────────────────────────────────── */
 .maple-animate {
   animation: maple-rise 0.55s ease both;
 }
@@ -997,7 +997,7 @@ table.dataTable thead th {
   cursor: pointer;
 }
 
-/* ── MAPLE Audit Trail ──────────────────────────────────────────────────────── */
+/* ── MAPLES Audit Trail ──────────────────────────────────────────────────────── */
 .maple-audit-trail {
   border: 1px solid var(--maple-border);
   border-radius: var(--maple-radius);
@@ -1096,7 +1096,7 @@ table.dataTable thead th {
   color: var(--maple-rose);
 }
 
-/* ── MAPLE Consensus Panel ──────────────────────────────────────────────────── */
+/* ── MAPLES Consensus Panel ──────────────────────────────────────────────────── */
 .maple-consensus-panel {
   border: 1px solid var(--maple-border);
   border-radius: var(--maple-radius);
@@ -1180,7 +1180,7 @@ table.dataTable thead th {
   line-height: 1.5;
 }
 
-/* ── MAPLE Devil's Advocate Panel ───────────────────────────────────────────── */
+/* ── MAPLES Devil's Advocate Panel ───────────────────────────────────────────── */
 .maple-da-panel {
   border: 1px solid var(--maple-border);
   border-left: 3px solid var(--maple-rose);
@@ -1226,7 +1226,7 @@ table.dataTable thead th {
   color: var(--maple-text-muted);
 }
 
-/* ── MAPLE Evidence Table Container ─────────────────────────────────────────── */
+/* ── MAPLES Evidence Table Container ─────────────────────────────────────────── */
 .maple-evidence-table-container {
   border: 1px solid var(--maple-border);
   border-radius: var(--maple-radius);
@@ -1289,7 +1289,7 @@ table.dataTable thead th {
   white-space: normal;
 }
 
-/* ── MAPLE Table Navigation Bar ─────────────────────────────────────────────── */
+/* ── MAPLES Table Navigation Bar ─────────────────────────────────────────────── */
 .maple-table-nav {
   display: flex;
   flex-wrap: wrap;

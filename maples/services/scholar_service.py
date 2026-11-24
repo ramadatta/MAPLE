@@ -2,7 +2,7 @@
 
 Google Scholar indexes full-text bodies, so it can surface papers whose marker
 genes appear only in the body (and are therefore missed by PubMed/Europe PMC
-abstract search). MAPLE uses it as a *finder* only: results are resolved to a
+abstract search). MAPLES uses it as a *finder* only: results are resolved to a
 DOI/PMID and the actual evidence text is read from an open copy (PMC/bioRxiv).
 
 Requires the `mcp` package and a Smithery endpoint (optionally an API key).

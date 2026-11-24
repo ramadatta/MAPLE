@@ -1,4 +1,4 @@
-"""Runtime configuration for MAPLE."""
+"""Runtime configuration for MAPLES."""
 import os
 
 PAPERS_PER_GENE = int(os.getenv("MAPLE_PAPERS_PER_GENE", "10"))

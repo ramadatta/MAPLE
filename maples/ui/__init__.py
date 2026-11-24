@@ -1,1 +1,1 @@
-# MAPLE UI components package
+# MAPLES UI components package

@@ -1,4 +1,4 @@
-"""Render the evidence table for MAPLE."""
+"""Render the evidence table for MAPLES."""
 from __future__ import annotations
 
 import csv
