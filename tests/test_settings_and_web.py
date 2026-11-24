@@ -148,3 +148,45 @@ def test_cli_version(capsys, monkeypatch):
 
     assert main(["--version"]) == 0
     assert capsys.readouterr().out.strip()
+
+
+# --- hosted mode (Hugging Face Space) ---------------------------------------
+
+@pytest.fixture
+def hosted(home, monkeypatch):
+    from maples.web.server import create_app
+
+    monkeypatch.setenv("MAPLES_HOSTED", "true")
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-host-secret-key-123456")
+    monkeypatch.setenv("OPENAI_BASE_URL", "https://api.blablador.fz-juelich.de/v1")
+    monkeypatch.setenv("OPENAI_MODEL", "alias-fast")
+    return TestClient(create_app(), base_url="http://127.0.0.1:8765")
+
+
+def test_hosted_settings_show_no_key_or_paths(hosted):
+    view = hosted.get("/api/settings").json()
+    assert view["hosted"] is True and view["has_llm_key"] is True
+    assert view["service_label"] == "Blablador (Helmholtz)"
+    text = str(view)
+    assert "sk-host" not in text and "OPENAI_API_KEY" not in text and "config_path" not in text
+
+
+def test_hosted_settings_cannot_be_changed_or_redirected(hosted):
+    r = hosted.post("/api/settings", json={"OPENAI_BASE_URL": "https://attacker.example/v1"})
+    assert r.status_code == 403
+    assert hosted.post("/api/settings/test").status_code == 403
+    import os
+    assert os.environ["OPENAI_BASE_URL"] == "https://api.blablador.fz-juelich.de/v1"
+
+
+def test_hosted_limits_parallel_runs(hosted, monkeypatch):
+    import maples.web.server as srv
+
+    monkeypatch.setattr(srv, "MAX_HOSTED_RUNS", 0)
+    r = hosted.post("/api/run", json={"genes": "TP63 KRT17"})
+    assert r.status_code == 429 and "busy" in r.json()["detail"]
+
+
+def test_leaf_icon_served_as_svg(client):
+    r = client.get("/leaf.svg")
+    assert r.status_code == 200 and r.headers["content-type"].startswith("image/svg+xml")

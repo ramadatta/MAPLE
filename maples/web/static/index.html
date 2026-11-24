@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>MAPLES</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%230E7A6B'/%3E%3Ctext x='16' y='22' font-size='16' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='700'%3EM%3C/text%3E%3C/svg%3E">
+<link rel="icon" type="image/svg+xml" href="/leaf.svg">
 <style>
 /* Runs offline: system fonts only, nothing loaded from the internet. */
 :root{
@@ -85,6 +85,7 @@ li.now .dotst{border-color:var(--home);border-top-color:transparent;animation:sp
 .warn{border:1px dashed var(--gap);border-radius:8px;padding:8px 10px;font-size:13px}
 .tbar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;align-items:center}
 .tbar input{flex:1;min-width:180px;width:auto}
+.tbar input[type=checkbox]{flex:none;min-width:0;margin:0}
 .tbar select{width:auto}
 .gfilter{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px}
 .gbtn{font-family:var(--f-mono);font-size:12px;border:1px solid var(--line);background:var(--sunken);color:var(--ink);padding:2px 8px;border-radius:999px;cursor:pointer}
@@ -146,12 +147,6 @@ svg .ringlbl{font-size:11px;letter-spacing:.1em;font-weight:600}
 .sw.dash{background:none;border:2px dashed var(--gap)} .sw.hollow{background:none;border:2px solid var(--c)}
 .bodygrid{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:18px;align-items:start}
 @media (max-width:760px){.bodygrid{grid-template-columns:minmax(0,1fr)}}
-.slider{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.slider input{flex:1;min-width:140px;width:auto;accent-color:var(--home);padding:0}
-.year{font-size:32px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1}
-.spread{list-style:none;padding:0;margin:12px 0 0;display:grid;gap:5px}
-.spread li{display:flex;gap:10px;font-size:13px} .spread li.future{opacity:.35}
-.spread .y{font-family:var(--f-mono);font-size:12px;color:var(--muted);width:3.2em;flex:none}
 .qlist{display:grid;gap:8px}
 .qcard{all:unset;cursor:pointer;display:grid;gap:4px;border:1px solid var(--line);border-left:4px solid var(--c);border-radius:8px;padding:8px 10px;box-sizing:border-box}
 .qcard:hover{background:var(--sunken)} .qcard:focus-visible{outline:2px solid var(--far)}
@@ -164,6 +159,32 @@ svg .ringlbl{font-size:11px;letter-spacing:.1em;font-weight:600}
 .indep{background:var(--sunken);border-radius:10px;padding:10px 12px;font-size:13.5px}
 .indep b{font-variant-numeric:tabular-nums}
 .acc{font-family:var(--f-mono);font-size:12px}
+/* maple leaf: still in the header, sways and glows while a run is going */
+.brand{display:flex;gap:12px;align-items:center}
+.brand .leaf{width:46px;height:46px}
+.leaf{flex:none;transform-origin:50% 90%;user-select:none}
+.running .leaf{animation:sway 2.6s ease-in-out infinite,glow 2.6s ease-in-out infinite}
+@keyframes sway{0%,100%{transform:rotate(-9deg) translateY(0)}50%{transform:rotate(9deg) translateY(-3px)}}
+@keyframes glow{0%,100%{filter:drop-shadow(0 0 0 rgba(242,128,24,0))}50%{filter:drop-shadow(0 0 9px rgba(242,128,24,.6))}}
+.phead .who{display:flex;gap:12px;align-items:center}
+.phead .leaf{width:40px;height:40px}
+.srcline{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;font-size:13px;margin-top:8px;padding:8px 10px;border-radius:8px;background:var(--sunken)}
+.srcline .meter{flex:1;min-width:120px;max-width:260px;height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+.srcline .meter i{display:block;height:100%;background:var(--home);border-radius:3px;transition:width .4s}
+/* sortable table headers */
+th[aria-sort] button{all:unset;cursor:pointer;display:inline-flex;gap:4px;align-items:center}
+th[aria-sort] button:focus-visible{outline:2px solid var(--far);outline-offset:2px;border-radius:3px}
+th[aria-sort] .ar{opacity:.35;font-size:10px}
+th[aria-sort="ascending"],th[aria-sort="descending"]{color:var(--ink)}
+th[aria-sort="ascending"] .ar,th[aria-sort="descending"] .ar{opacity:1}
+/* disclaimer */
+.caveat{border:1px solid var(--line);border-left:4px solid var(--near);border-radius:8px;padding:10px 12px;font-size:13px;background:var(--sunken)}
+.caveat>b{display:block;margin-bottom:2px}
+.caveat ul{margin:4px 0 0;padding-left:18px}
+.plist summary{cursor:pointer;font-size:13px;color:var(--home);font-weight:600}
+.plist ul{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:6px;max-height:420px;overflow:auto}
+.plist li{font-size:13px;line-height:1.45}
+.plist .pill{font-size:11px;margin-right:4px}
 @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -171,8 +192,9 @@ svg .ringlbl{font-size:11px;letter-spacing:.1em;font-weight:600}
 <div class="wrap">
   <header>
     <div class="brand">
-      <h1>MAPLES</h1>
-      <p>Mapping Analogous Programs from Literature Evidence across Species, organs and diseases</p>
+      <img class="leaf" src="/leaf.svg" alt="" width="46" height="46">
+      <div><h1>MAPLES</h1>
+      <p>Mapping Analogous Programs from Literature Evidence across Species, organs and diseases</p></div>
     </div>
     <div class="hright">
       <span class="chip" id="aichip"><i></i><span>Checking settings…</span></span>
@@ -205,9 +227,12 @@ svg .ringlbl{font-size:11px;letter-spacing:.1em;font-weight:600}
   </section>
 
   <section class="card progress" id="progress" hidden aria-live="polite">
-    <div class="phead"><h3 id="ptitle">Running</h3><span class="t" id="ptime"></span></div>
+    <div class="phead"><div class="who"><img class="leaf" src="/leaf.svg" alt="" width="40" height="40"><h3 id="ptitle">Running</h3></div><span class="t" id="ptime"></span></div>
+    <p class="hint" id="pnotes" hidden></p>
+    <p class="hint" id="pexpect" hidden>A run usually takes 3–6 minutes. MAPLES waits for Europe PMC's full-text search because it finds papers the other sources miss. You can switch to another tab: this tab's title shows the progress and a ✓ when results are ready.</p>
     <ol id="pstages"></ol>
     <p class="hint" id="pdetail"></p>
+    <div class="srcline" id="psrc" hidden></div>
     <div class="live" id="plive" hidden></div>
   </section>
 
@@ -222,18 +247,18 @@ svg .ringlbl{font-size:11px;letter-spacing:.1em;font-weight:600}
       </div>
       <div class="tabs" role="tablist">
         <button class="tab" role="tab" data-view="summary" aria-selected="true">Summary</button>
+        <button class="tab" role="tab" data-view="table" aria-selected="false">Evidence table</button>
         <button class="tab" role="tab" data-view="field-map" aria-selected="false">Field map</button>
         <button class="tab" role="tab" data-view="dot-plot" aria-selected="false">Gene × field</button>
         <button class="tab" role="tab" data-view="body-map" aria-selected="false">Body map</button>
-        <button class="tab" role="tab" data-view="timeline" aria-selected="false">Timeline</button>
-        <button class="tab" role="tab" data-view="table" aria-selected="false">Evidence table</button>
       </div>
       <div class="view" id="view"></div>
     </main>
     <aside class="panel drawer" id="drawer" aria-live="polite"></aside>
   </div>
 
-  <p class="foot">Runs on this computer. Your genes go only to the literature databases and the AI service you chose in Settings. Research use only.</p>
+  <p class="foot" id="footnote">Runs on this computer. Your genes go only to the literature databases and the AI service you chose in Settings.<br>
+    Research use only, not for clinical or diagnostic decisions. Results are read from papers by an AI model and can contain mistakes: check the quotes before relying on them.</p>
 </div>
 
 <dialog id="settings" aria-labelledby="stitle">
@@ -272,7 +297,7 @@ const EXAMPLE={genes:'TP63, KRT17, KRT5, CDKN2A, CDKN1A, LAMB3, LAMC2, VIM, MMP7
 const ETYPE={direct_marker_celltype_assignment:'Direct marker assignment',cluster_annotation:'Cluster annotation',differential_expression_only:'Differential expression only',gene_mention_only:'Gene mentioned only'};
 const CONFC={High:'var(--ok)',Medium:'var(--near)',Low:'var(--gap)',Insufficient:'var(--muted)'};
 let SET=null, RESULT=null, GENES=[], view='summary', sel=null, WANT={};
-const T={q:'',genes:new Set(),type:'',sort:'genes',rings:new Set(['home','near','far','unplaced']),system:'',secondary:true};
+const T={q:'',genes:new Set(),type:'',sort:{key:'genes',dir:'desc'},rings:new Set(['home','near','far','unplaced']),system:'',secondary:true};
 const RINGS={home:{label:'Your field',c:'var(--home)'},near:{label:'Near',c:'var(--near)'},far:{label:'Far',c:'var(--far)'},unplaced:{label:'Not stated',c:'var(--muted)'}};
 const RING_ORDER=['home','near','far','unplaced'];
 let MODE='agnostic';
@@ -320,6 +345,7 @@ function presetFor(s){
 function renderChip(){
   const c=$('#aichip');
   if(!SET){c.innerHTML='<i></i><span>Settings unavailable</span>';return}
+  if(SET.hosted){c.style.setProperty('--c',SET.has_llm_key?'var(--ok)':'var(--gap)');c.innerHTML=`<i></i><span>${SET.has_llm_key?esc(SET.service_label)+(SET.OPENAI_MODEL?' · '+esc(SET.OPENAI_MODEL):''):'AI service not set up by the host'}</span>`;return}
   if(SET.has_llm_key){const p=SET.presets[presetFor(SET)];c.style.setProperty('--c','var(--ok)');c.innerHTML=`<i></i><span>${esc(p.label)}${SET.OPENAI_MODEL?' · '+esc(SET.OPENAI_MODEL):''}</span>`}
   else{c.style.setProperty('--c','var(--gap)');c.innerHTML='<i></i><span>No API key yet</span>'}
 }
@@ -353,20 +379,41 @@ function setRunHash(id){RUN_ID=id;const h='#run-'+id+(RESULT?`/${view}/${MODE}`:
 $('#example').onclick=()=>{$('#genes').value=EXAMPLE.genes;$('#tissue').value=EXAMPLE.tissue;$('#disease').value=EXAMPLE.disease;$('#species').value=EXAMPLE.species};
 $('#runForm').onsubmit=async e=>{
   e.preventDefault();$('#formErr').textContent='';
-  if(SET&&!SET.has_llm_key){$('#formErr').textContent='Add your API key in Settings first.';$('#openSettings').click();return}
+  if(SET&&!SET.has_llm_key){if(SET.hosted){$('#formErr').textContent='This hosted version has no AI service set up yet. Please try again later.';return}
+    $('#formErr').textContent='Add your API key in Settings first.';$('#openSettings').click();return}
   const body={genes:$('#genes').value,tissue:$('#tissue').value.trim()||null,disease:$('#disease').value.trim()||null,species:$('#species').value||null};
   store.set('maples:last',body);
-  $('#runBtn').disabled=true;
+  $('#runBtn').disabled=true;document.body.classList.add('running');
   try{const job=await api('/api/run',{method:'POST',body:JSON.stringify(body)});setRunHash(job.id);showProgress(job);poll(job.id)}
-  catch(err){$('#formErr').textContent=err.message;$('#runBtn').disabled=false}
+  catch(err){$('#formErr').textContent=err.message;$('#runBtn').disabled=false;document.body.classList.remove('running')}
 };
 function showProgress(job){
   $('#progress').hidden=false;
+  document.body.classList.toggle('running',job.status==='running');
+  const notes=job.input_notes||[];$('#pnotes').hidden=!notes.length;$('#pnotes').textContent=notes.join(' ');
   $('#ptitle').textContent=job.status==='error'?'Run failed':job.status==='done'?'Finished':`Analysing ${job.genes.length} genes`;
-  $('#ptime').textContent=`${Math.round(job.elapsed_seconds)} s`;
+  const secs=Math.round(job.elapsed_seconds),clock=`${Math.floor(secs/60)}:${String(secs%60).padStart(2,'0')}`;
+  $('#ptime').textContent=clock;
+  const running=job.status==='running';
+  $('#pexpect').hidden=!running;
+  // tab title: progress while running, a tick when ready (cleared when the tab is looked at)
+  document.title=running?`${clock} · step ${Math.min(job.stage_index+1,job.stages.length)}/${job.stages.length} · MAPLES`
+    :job.status==='done'?(document.hidden?'✓ Results ready · MAPLES':'MAPLES'):job.status==='error'?'✕ Run failed · MAPLES':'MAPLES';
+  const ep=(job.sources||{}).europepmc,src=$('#psrc');
+  if(ep&&running){
+    const tot=ep.searches_total||0,done=ep.searches_done||0,pct=tot?Math.round(100*done/tot):0,found=[];
+    if(ep.fulltext_papers!=null)found.push(`${ep.fulltext_papers} full-text paper${ep.fulltext_papers===1?'':'s'}`);
+    if(ep.preprint_papers!=null)found.push(`${ep.preprint_papers} preprint${ep.preprint_papers===1?'':'s'}`);
+    const msg=ep.state==='searching'?`Europe PMC full-text search: ${done} of ${tot} searches back`:ep.state==='reading'?'Europe PMC: all searches back, fetching the papers':'Europe PMC: finished';
+    src.hidden=false;src.innerHTML=`<span>${msg}</span>${ep.state==='searching'?`<span class="meter" role="progressbar" aria-valuemin="0" aria-valuemax="${tot}" aria-valuenow="${done}"><i style="width:${pct}%"></i></span>`:''}${found.length?`<span class="hint" style="margin:0">Added ${found.join(' and ')}</span>`:''}`;
+  }else src.hidden=true;
   $('#pstages').innerHTML=job.stages.map((s,i)=>{const st=i<job.stage_index?'done':i===job.stage_index&&job.status==='running'?'now':'';
     return `<li class="${st}"><span class="dotst">${st==='done'?'✓':''}</span>${esc(s)}</li>`}).join('');
-  $('#pdetail').textContent=job.status==='error'?job.error:job.status==='running'?job.detail:'';
+  // while finding papers, say which step is running (it is the longest stage)
+  const S=job.sources||{},ph=S.phase&&S.phase.text,ft=S.fulltext;
+  let det=job.detail;
+  if(running&&job.stage_index===0&&ph){det=ph+(ft&&ph.startsWith('Fetching full text')&&ft.total?`: ${ft.done} of ${ft.total} (${ft.found} open)`:'')+'…'}
+  $('#pdetail').textContent=job.status==='error'?job.error:running?det:'';
   $('#pdetail').className=job.status==='error'?'hint err':'hint';
   const lv=job.live||{},box=$('#plive');
   if(job.status==='running'&&lv.papers_total){
@@ -380,8 +427,8 @@ async function poll(id){
     const job=await api('/api/run/'+id);if(job.status==='running')GENES=job.genes;showProgress(job);
     if(job.status==='running'){setTimeout(()=>poll(id),1000);return}
     $('#runBtn').disabled=false;
-    if(job.status==='done'){RESULT=job.result;GENES=job.genes;T.genes=new Set();T.q='';T.type='';T.system='';T.rings=new Set(RING_ORDER);sel=null;LIST=null;BODY_YEAR=null;view=WANT.view||'summary';MODE=(WANT.mode==='agnostic'||!RESULT.home_field)?'agnostic':(WANT.mode||'focused');WANT={};renderResults();setRunHash(id)}
-  }catch(e){$('#formErr').textContent=e.message;$('#runBtn').disabled=false;$('#progress').hidden=true}
+    if(job.status==='done'){RESULT=job.result;GENES=job.genes;T.genes=new Set();T.q='';T.type='';T.system='';T.rings=new Set(RING_ORDER);sel=null;LIST=null;view=['summary','table','field-map','dot-plot','body-map'].includes(WANT.view)?WANT.view:'summary';MODE=(WANT.mode==='agnostic'||!RESULT.home_field)?'agnostic':(WANT.mode||'focused');WANT={};renderResults();setRunHash(id)}
+  }catch(e){$('#formErr').textContent=e.message;$('#runBtn').disabled=false;$('#progress').hidden=true;document.body.classList.remove('running')}
 }
 
 /* ---------- results ---------- */
@@ -399,7 +446,7 @@ function renderResults(){
     if(b.dataset.mode==='focused'){b.disabled=!hasHome;b.title=hasHome?'':'Add your field (organ, disease or species) to use this view'}});
   $('#homechip').innerHTML=hasHome?`<i></i>Your field: <b>${esc(fieldLabel(RESULT.home_field))}</b>`:'<span class="hint" style="margin:0">No field given: showing all fields equally</span>';
   document.querySelectorAll('.tab[data-view]').forEach(t=>t.setAttribute('aria-selected',t.dataset.view===view));
-  ({summary:renderSummary,'field-map':renderFieldMap,'dot-plot':renderDotPlot,'body-map':renderBodyMap,timeline:renderTimeline,table:renderTable}[view]||renderSummary)();
+  ({summary:renderSummary,'field-map':renderFieldMap,'dot-plot':renderDotPlot,'body-map':renderBodyMap,table:renderTable}[view]||renderSummary)();
   if(!sel)renderDrawerIntro();
 }
 document.querySelectorAll('.tab[data-view]').forEach(t=>t.onclick=()=>{view=t.dataset.view;renderResults();if(RUN_ID)setRunHash(RUN_ID)});
@@ -417,6 +464,23 @@ function whereSection(ev){
   const nf=new Set(ev.map(e=>fieldLabel(e.field))).size;
   return `<div class="sec"><h3>Where the evidence comes from</h3><p>${nf} different fields across ${top.length} organ systems.</p>
     <div class="stats" style="margin:4px 0">${top.slice(0,4).map(([k,rows])=>`<div class="stat"><b>${papersIn(rows)}</b><span>papers · ${esc(cap(k))}</span></div>`).join('')}</div></div>`;
+}
+const POOL_STATUS={quoted:{t:'Quoted',c:'var(--ok)'},read_no_quote:{t:'Read, no quote',c:'var(--muted)'},not_read:{t:'Not read: slots full',c:'var(--near)'},screened_out:{t:'Screened out by abstract skim',c:'var(--muted)'}};
+function poolSection(){
+  const p=RESULT.sc_pool;
+  if(!p||p.in_pubmed==null)return '';
+  if(!p.in_pubmed)return `<div class="sec"><h3>Single-cell papers naming 2 or more of your genes</h3><p class="hint" style="margin:0">PubMed has no paper whose title or abstract names 2 or more of your genes together with single-cell words.</p></div>`;
+  const read=(p.quoted||0)+(p.read_no_quote||0),parts=[`PubMed lists <b>${p.in_pubmed}</b>`];
+  if(p.fetched<p.in_pubmed)parts.push(`the <b>${p.fetched}</b> most relevant fetched`);
+  parts.push(`<b>${p.kept}</b> really name two different genes`,`<b>${read}</b> read in full (${p.quoted||0} gave quotes)`);
+  if(p.screened_out)parts.push(`${p.screened_out} screened out by an AI skim of the abstract`);
+  if(p.not_read)parts.push(`<b>${p.not_read}</b> not read (reading slots full)`);
+  const merged=(p.merged_names||[]).length?` Other names of one gene count once (${p.merged_names.map(esc).join(', ')}).`:'';
+  return `<div class="sec"><h3>Single-cell papers naming 2 or more of your genes</h3>
+    <div class="indep">${parts.join(' · ')}</div>
+    <p class="hint" style="margin:0">A PubMed title/abstract search for any two of your genes plus single-cell words. These papers are read on top of the regular selection.${merged}</p>
+    <details class="plist"><summary>Show all ${p.papers.length} papers and what happened to each</summary>
+     <ul>${p.papers.map(x=>`<li><span class="pill" style="--c:${POOL_STATUS[x.status].c}">${POOL_STATUS[x.status].t}</span> <span class="acc">${x.year??''}</span> <a href="${pubmed(x.pmid)}" target="_blank" rel="noopener">${esc(x.title||'PMID '+x.pmid)}</a></li>`).join('')}</ul></details></div>`;
 }
 function indepSection(ev){
   if(!ev.length)return '';
@@ -445,6 +509,14 @@ function renderSummary(){
      <div class="stat"><b>${pmids.size}</b><span>papers with evidence</span></div>
      <div class="stat"><b>${ev.length}</b><span>quotes found</span></div>
    </div>
+   <div class="caveat" role="note"><b>How far to trust this</b>
+    <ul>
+     <li><b>Checked:</b> every paper and PMID comes from PubMed, and every quote is matched against the paper's text, so nothing here is invented.</li>
+     <li><b>Not checked:</b> an AI model decides what each quote means and groups the names. It can misread a sentence (for example, miss a "not"). Read the quote before you rely on a row.</li>
+     <li><b>Not complete:</b> only papers MAPLES could find and open are included${cov.abstract_only_papers?`; ${cov.abstract_only_papers} were read from the abstract only`:''}. No quote does not mean no evidence.</li>
+     <li>Research use only, not for clinical or diagnostic decisions.</li>
+    </ul></div>
+   ${poolSection()}
    ${indepSection(ev)}
    ${whereSection(ev)}
    ${groupsSection()}
@@ -468,9 +540,27 @@ function filtered(){
   else if(T.system)rows=rows.filter(e=>systemOf(e)===T.system);
   const q=T.q.trim().toLowerCase();
   if(q)rows=rows.filter(e=>[e.celltype_label,e.label_group,fieldLabel(e.field),e.paper_title,e.evidence_snippet,e.tissue,e.disease,e.species,e.pmid,e.journal].join(' ').toLowerCase().includes(q));
-  const s={genes:(a,b)=>b.matched_user_genes.length-a.matched_user_genes.length,newest:(a,b)=>(b.publication_year||0)-(a.publication_year||0),oldest:(a,b)=>(a.publication_year||9999)-(b.publication_year||9999),celltype:(a,b)=>nameOf(a).localeCompare(nameOf(b)),field:(a,b)=>MODE==='focused'?RING_ORDER.indexOf(a.ring||'unplaced')-RING_ORDER.indexOf(b.ring||'unplaced'):systemOf(a).localeCompare(systemOf(b))};
-  return rows.sort(s[T.sort]);
+  const col=COLS.find(c=>c.key===T.sort.key)||COLS[2],sign=T.sort.dir==='asc'?1:-1;
+  // missing values always sink to the bottom; ties fall back to most genes, then newest
+  const tie=(a,b)=>(b.matched_user_genes.length-a.matched_user_genes.length)||((b.publication_year||0)-(a.publication_year||0));
+  return rows.sort((a,b)=>{const x=col.val(a),y=col.val(b);
+    if(x==null&&y==null)return tie(a,b);if(x==null)return 1;if(y==null)return -1;
+    const d=typeof x==='string'?x.localeCompare(y,undefined,{numeric:true,sensitivity:'base'}):x-y;return d?sign*d:tie(a,b)});
 }
+// Table columns: label, sort value, and the direction a first click sorts in.
+const ETYPE_RANK={direct_marker_celltype_assignment:0,cluster_annotation:1,differential_expression_only:2,gene_mention_only:3};
+const COLS=[
+  {key:'year',label:'Year',first:'desc',val:e=>e.publication_year??null},
+  {key:'celltype',label:'Cell type',first:'asc',val:e=>nameOf(e)||null},
+  {key:'genes',label:'Your genes',first:'desc',val:e=>e.matched_user_genes.length},
+  {key:'field',label:'Field',first:'asc',val:e=>MODE==='focused'?`${RING_ORDER.indexOf(e.ring||'unplaced')} ${fieldLabel(e.field)}`:`${systemOf(e)} ${fieldLabel(e.field)}`},
+  {key:'evidence',label:'Evidence',first:'asc',val:e=>(ETYPE_RANK[e.evidence_type]??9)+(isPrimary(e)?0:.5)},
+  {key:'dataset',label:'Dataset',first:'desc',val:e=>(e.datasets||[]).length},
+  {key:'pmid',label:'PMID',first:'asc',val:e=>/^\d+$/.test(e.pmid||'')?+e.pmid:(e.pmid||null)},
+];
+function thSort(c){const on=T.sort.key===c.key,dir=on?T.sort.dir:'none';
+  const aria=dir==='asc'?'ascending':dir==='desc'?'descending':'none';
+  return `<th aria-sort="${aria}"><button data-sort="${c.key}" title="Sort by ${esc(c.label.toLowerCase())}">${esc(c.label)}<span class="ar" aria-hidden="true">${dir==='asc'?'▲':dir==='desc'?'▼':'↕'}</span></button></th>`}
 function renderTable(){
   const ev=RESULT.evidence||[];
   if(!ev.length){$('#view').innerHTML='<p class="empty">No quotes were found in the papers that were read. Try fewer or more specific genes, or check the notes on the Summary tab.</p>';return}
@@ -480,14 +570,13 @@ function renderTable(){
   $('#view').innerHTML=`
    <div class="tbar"><input id="q" type="search" placeholder="Search cell types, tissues, diseases, quotes" value="${esc(T.q)}" aria-label="Search">
     <select id="type" aria-label="Evidence type"><option value="">All evidence types</option>${types.map(t=>`<option value="${t}">${esc(ETYPE[t]||t)}</option>`).join('')}</select>
-    <select id="sort" aria-label="Sort"><option value="genes">Most of your genes</option><option value="newest">Newest first</option><option value="oldest">Oldest first</option><option value="celltype">Cell type A–Z</option><option value="field">${MODE==='focused'?'Your field first':'By organ system'}</option></select>
     ${MODE==='agnostic'?`<select id="system" aria-label="Organ system"><option value="">All organ systems</option>${[...new Set(ev.map(systemOf))].sort().map(s=>`<option value="${esc(s)}">${esc(cap(s))}</option>`).join('')}</select>`:''}
     <label class="hint" style="margin:0;display:inline-flex;gap:6px;align-items:center"><input type="checkbox" id="sec2" style="width:auto" ${T.secondary?'checked':''}> Include reviews</label>
     <button class="btn" id="dlCsv2">Download CSV</button></div>
    ${MODE==='focused'?`<div class="gfilter" aria-label="Show fields">${RING_ORDER.map(r=>`<button class="rbtn" data-r="${r}" aria-pressed="${T.rings.has(r)}" style="--c:${RINGS[r].c}"><i></i>${RINGS[r].label} (${ev.filter(e=>(e.ring||'unplaced')===r).length})</button>`).join('')}</div>`:''}
    <div class="gfilter" aria-label="Show rows containing these genes">${used.map(g=>`<button class="gbtn" data-g="${esc(g)}" aria-pressed="${T.genes.has(g)}">${esc(g)}</button>`).join('')}</div>
-   <p class="hint" style="margin:0 0 8px">${rows.length} of ${ev.length} rows. Click a row to read the quote.</p>
-   <div class="scroll"><table><thead><tr><th>Year</th><th>Cell type</th><th>Your genes</th><th>Field</th><th>Evidence</th><th>Dataset</th><th>PMID</th></tr></thead><tbody>
+   <p class="hint" style="margin:0 0 8px">${rows.length} of ${ev.length} rows. Click a column name to sort (click again to reverse). Click a row to read the quote.</p>
+   <div class="scroll"><table><thead><tr>${COLS.map(thSort).join('')}</tr></thead><tbody>
    ${rows.map(e=>`<tr data-i="${e._i}" tabindex="0" class="${sel===e._i?'sel':''}"><td class="num">${e.publication_year??''}</td><td>${esc(nameOf(e))}${e.label_group&&e.label_group!==e.celltype_label?`<div class="sub">Paper says: ${esc(e.celltype_label)}</div>`:''}</td>
      <td><div class="genes">${e.matched_user_genes.map(g=>`<code>${esc(g)}</code>`).join('')}</div></td>
      <td>${MODE==='focused'?`<span class="pill" style="--c:${RINGS[e.ring||'unplaced'].c}">${RINGS[e.ring||'unplaced'].label}</span><br>`:''}${esc(fieldLabel(e.field))}${MODE==='agnostic'?`<div class="sub">${esc(cap(systemOf(e)))}</div>`:''}</td>
@@ -495,13 +584,15 @@ function renderTable(){
      <td>${(e.datasets||[]).length?e.datasets.slice(0,3).map(a=>`<span class="acc">${esc(a)}</span>`).join('<br>')+(e.datasets.length>3?`<div class="sub">+${e.datasets.length-3} more</div>`:''):'<span class="sub">not found</span>'}</td>
      <td class="num">${esc(e.pmid)}</td></tr>`).join('')}
    </tbody></table></div>`;
-  $('#type').value=T.type;$('#sort').value=T.sort;
+  $('#type').value=T.type;
+  document.querySelectorAll('th button[data-sort]').forEach(b=>b.onclick=()=>{const c=COLS.find(x=>x.key===b.dataset.sort);
+    T.sort=T.sort.key===c.key?{key:c.key,dir:T.sort.dir==='asc'?'desc':'asc'}:{key:c.key,dir:c.first};renderTable();
+    const nb=document.querySelector(`th button[data-sort="${c.key}"]`);if(nb)nb.focus()});
   $('#sec2').onchange=e=>{T.secondary=e.target.checked;renderTable()};
   if($('#system')){$('#system').value=T.system;$('#system').onchange=e=>{T.system=e.target.value;renderTable()}}
   document.querySelectorAll('.rbtn').forEach(b=>b.onclick=()=>{const r=b.dataset.r;T.rings.has(r)?T.rings.delete(r):T.rings.add(r);renderTable()});
   $('#q').oninput=e=>{T.q=e.target.value;const p=e.target.selectionStart;renderTable();const n=$('#q');n.focus();n.setSelectionRange(p,p)};
   $('#type').onchange=e=>{T.type=e.target.value;renderTable()};
-  $('#sort').onchange=e=>{T.sort=e.target.value;renderTable()};
   $('#dlCsv2').onclick=()=>download('maples-evidence.csv',toCsv(rows),'text/csv');
   document.querySelectorAll('.gbtn').forEach(b=>b.onclick=()=>{const g=b.dataset.g;T.genes.has(g)?T.genes.delete(g):T.genes.add(g);renderTable()});
   document.querySelectorAll('tbody tr').forEach(tr=>{const open=()=>{sel=+tr.dataset.i;LIST=null;renderTable();renderDrawer(RESULT.evidence[sel])};
@@ -509,7 +600,7 @@ function renderTable(){
 }
 function renderDrawerIntro(){
   $('#drawer').innerHTML=`<div><div class="eyebrow">Quotes</div><h2>Click a row to see its quote</h2></div>
-   <p class="hint">Every quote is copied word for word from the paper and checked against its text, so you can find it in the original with Ctrl+F.</p>`;
+   <p class="hint">Every quote is copied from the paper and checked against its text, so you can find it in the original with Ctrl+F. The cell-type reading is the AI's: check that the quote really says it.</p>`;
 }
 function renderDrawer(e){
   const links=[`<a href="${pubmed(e.pmid)}" target="_blank" rel="noopener">PubMed ${esc(e.pmid)}</a>`];
@@ -731,15 +822,14 @@ function renderBodyMap(){
   const rows=evidenceRows();
   if(!rows.length){$('#view').innerHTML='<p class="empty">No quotes to draw yet.</p>';return}
   const focused=MODE==='focused';
-  const years=rows.map(e=>e.publication_year).filter(Boolean);const y0=Math.min(...years),y1=Math.max(...years);
-  if(BODY_YEAR===null||BODY_YEAR<y0||BODY_YEAR>y1)BODY_YEAR=y1;
-  const upto=rows.filter(e=>!e.publication_year||e.publication_year<=BODY_YEAR);
+  const upto=rows;
   const byOrgan=new Map();upto.forEach(e=>{const o=e.field&&e.field.organ;if(!o)return;if(!byOrgan.has(o))byOrgan.set(o,[]);byOrgan.get(o).push(e)});
   const placed=[...byOrgan.entries()].filter(([o])=>ORG_POS[o]);const elsewhere=[...byOrgan.entries()].filter(([o])=>!ORG_POS[o]);
   // labels: left column for organs left of the midline, right column otherwise; spread to avoid overlaps
   const lab=placed.map(([o,rs])=>{const p=Array.isArray(ORG_POS[o][0])?ORG_POS[o]:[ORG_POS[o]];return{o,rs,p,side:p[0][0]<300&&p.length===1?'L':'R',y:p[0][1]}});
   ['L','R'].forEach(side=>{let last=-99;lab.filter(l=>l.side===side).sort((a,b)=>a.y-b.y).forEach(l=>{l.ly=Math.max(l.y,last+34);last=l.ly})});
   const order={home:0,near:1,far:2,unplaced:3};
+  const BM_H=Math.max(540,...lab.map(l=>l.ly+26)); // grow the drawing when the label columns run long
   let marks='';
   lab.forEach(l=>{
     const best=focused?l.rs.map(ringOf).sort((a,b)=>order[a]-order[b])[0]:null;
@@ -753,55 +843,27 @@ function renderBodyMap(){
       <text x="${lx}" y="${l.ly}" text-anchor="${anchor}" style="font-size:13px;font-weight:600">${esc(cap(l.o))}</text>
       <text x="${lx}" y="${l.ly+14}" text-anchor="${anchor}" class="mut" style="font-size:11px">${i.papers} paper${i.papers===1?'':'s'}${mouse?' · incl. mouse':''}</text></g>`;
   });
-  const firsts=[...new Set(rows.map(e=>e.field&&e.field.organ).filter(Boolean))].map(o=>{const rs=rows.filter(e=>e.field&&e.field.organ===o&&e.publication_year);return{o,y:rs.length?Math.min(...rs.map(e=>e.publication_year)):null,rs}}).filter(x=>x.y).sort((a,b)=>a.y-b.y);
-  $('#view').innerHTML=`<div class="viewhead"><h2>Body map</h2><p>Where these genes have been described, and when. Drag the year or press Play to watch the evidence spread between organs.</p></div>
+  $('#view').innerHTML=`<div class="viewhead"><h2>Body map</h2><p>Which organs the quotes come from. Dot size shows how many papers; click an organ to read its quotes.</p></div>
    <div class="bodygrid">
-    <div class="scroll"><svg id="bm" viewBox="0 0 600 540" style="width:100%;min-width:340px;height:auto" role="img" aria-label="Body map">
+    <div class="scroll"><svg id="bm" viewBox="0 0 600 ${BM_H}" style="width:100%;min-width:340px;height:auto" role="img" aria-label="Body map">
      <g fill="var(--sil)"><circle cx="300" cy="50" r="34"/><rect x="286" y="80" width="28" height="26" rx="8"/><rect x="232" y="100" width="136" height="216" rx="48"/>
       <rect x="192" y="112" width="34" height="186" rx="17" transform="rotate(8 209 112)"/><rect x="374" y="112" width="34" height="186" rx="17" transform="rotate(-8 391 112)"/>
       <rect x="244" y="300" width="50" height="210" rx="24"/><rect x="306" y="300" width="50" height="210" rx="24"/></g>${marks}</svg></div>
     <div>
-     <div class="slider"><span class="year">${BODY_YEAR}</span><input type="range" id="yrs" min="${y0}" max="${y1}" value="${BODY_YEAR}" aria-label="Year" ${y0===y1?'disabled':''}><button class="btn" id="play" ${y0===y1?'disabled':''}>${BODY_TIMER?'Pause':'Play'}</button></div>
-     <ul class="spread">${firsts.map(x=>`<li class="${x.y>BODY_YEAR?'future':''}"><span class="y">${x.y}</span><span>First quote from <b>${esc(cap(x.o))}</b></span></li>`).join('')}</ul>
      ${elsewhere.length?`<p class="hint">Also: ${elsewhere.map(([o,rs])=>`${esc(o)} (${indep(rs).papers})`).join(', ')}.</p>`:''}
      ${legend(focused?[['var(--home)','Your field'],['var(--near)','Near'],['var(--far)','Far']]:[...new Set(upto.map(systemOf))].map(s=>[sysColor(s),cap(s)]))}
     </div></div>`;
-  $('#yrs').oninput=e=>{BODY_YEAR=+e.target.value;renderBodyMap()};
-  $('#play').onclick=()=>{
-    if(BODY_TIMER){clearInterval(BODY_TIMER);BODY_TIMER=null;renderBodyMap();return}
-    if(matchMedia('(prefers-reduced-motion: reduce)').matches){BODY_YEAR=y1;renderBodyMap();return}
-    BODY_YEAR=y0;BODY_TIMER=setInterval(()=>{if(view!=='body-map'||BODY_YEAR>=y1){clearInterval(BODY_TIMER);BODY_TIMER=null}else BODY_YEAR++;if(view==='body-map')renderBodyMap()},700);renderBodyMap()};
-  bindKeys($('#bm'),'.organ',el=>{const rs=byOrgan.get(el.dataset.o)||[];openRows({eyebrow:'Organ',title:cap(el.dataset.o),sub:`Quotes up to ${BODY_YEAR}`,rows:rs})});
+  bindKeys($('#bm'),'.organ',el=>{const rs=byOrgan.get(el.dataset.o)||[];openRows({eyebrow:'Organ',title:cap(el.dataset.o),rows:rs})});
 }
-let BODY_YEAR=null,BODY_TIMER=null;
 
-function renderTimeline(){
-  const rows=evidenceRows().filter(e=>e.publication_year);
-  if(!rows.length){$('#view').innerHTML='<p class="empty">No dated quotes to draw.</p>';return}
-  const focused=MODE==='focused';
-  const lanesMap=new Map();rows.forEach(e=>{const k=fieldKey(e.field);if(!lanesMap.has(k))lanesMap.set(k,{key:k,field:e.field,ring:ringOf(e),system:systemOf(e),rows:[]});lanesMap.get(k).rows.push(e)});
-  let lanes=[...lanesMap.values()].map(l=>(l.first=Math.min(...l.rows.map(e=>e.publication_year)),l));
-  lanes.sort((a,b)=>focused?(RING_ORDER.indexOf(a.ring)-RING_ORDER.indexOf(b.ring))||(a.first-b.first):(a.first-b.first));
-  const MAXL=16,hidden=Math.max(0,lanes.length-MAXL);
-  if(hidden){const keep=new Set([...lanes].sort((a,b)=>indep(b.rows).papers-indep(a.rows).papers).slice(0,MAXL).map(l=>l.key));lanes=lanes.filter(l=>keep.has(l.key))}
-  const years=rows.map(e=>e.publication_year);let y0=Math.min(...years),y1=Math.max(...years);if(y1-y0<4){y0-=2;y1+=2}
-  const L=230,R=30,W=1000,LH=38,TOP=36,H=TOP+lanes.length*LH+18,X=y=>L+(y-y0)/(y1-y0)*(W-L-R);
-  const step=y1-y0>16?4:y1-y0>8?2:1;let s='';
-  for(let y=y0;y<=y1;y++){if((y-y0)%step)continue;s+=`<line x1="${X(y)}" x2="${X(y)}" y1="${TOP-8}" y2="${H-12}" stroke="var(--line)"/><text x="${X(y)}" y="${TOP-14}" text-anchor="middle" class="mut mono" style="font-size:11px">${y}</text>`}
-  lanes.forEach((l,i)=>{const y=TOP+i*LH+LH/2,c=focused?RINGS[l.ring].c:sysColor(l.system);
-    if(focused&&l.ring==='home')s+=`<rect x="4" y="${y-LH/2+3}" width="${W-8}" height="${LH-6}" rx="6" fill="var(--home)" fill-opacity=".08"/>`;
-    s+=`<text x="${L-14}" y="${y+4}" text-anchor="end" style="font-size:12.5px;font-weight:${focused&&l.ring==='home'?700:500}">${esc(trunc(fieldLabel(l.field),30))}</text>`;
-    const papers=[...new Map(l.rows.map(e=>[e.pmid,e])).values()].sort((a,b)=>a.publication_year-b.publication_year);
-    const seen={},firstP=papers.find(isPrimary);
-    papers.forEach(p=>{seen[p.publication_year]=(seen[p.publication_year]||0)+1;const x=X(p.publication_year)+(seen[p.publication_year]-1)*12;
-      s+=`<circle class="tp" data-l="${esc(l.key)}" data-p="${esc(p.pmid)}" tabindex="0" role="button" cx="${x}" cy="${y}" r="7" fill="${isPrimary(p)?c:'var(--surface)'}" stroke="${c}" stroke-width="2" ${p.is_preprint?'stroke-dasharray="2 2"':''}><title>PMID ${esc(p.pmid)} · ${p.publication_year}${isPrimary(p)?'':' · review'}${p.is_preprint?' · preprint':''}</title></circle>`;
-      if(p===firstP)s+=`<text x="${x}" y="${y-11}" text-anchor="middle" style="font-size:10px;font-weight:600;fill:${c}">first</text>`});
-  });
-  $('#view').innerHTML=`<div class="viewhead"><h2>Timeline</h2><p>When each field reported these genes. One dot per paper; "first" marks the earliest primary study in that field.</p></div>
-   <div class="scroll"><svg id="tl" viewBox="0 0 ${W} ${H}" style="min-width:720px;width:100%;height:auto" role="img" aria-label="Timeline">${s}</svg></div>
-   ${legend([[focused?'var(--home)':'var(--s1)','Primary study'],['var(--muted)','Review','hollow']])}
-   ${hidden?`<p class="hint">${hidden} field${hidden===1?'':'s'} with the fewest papers left out; see the Evidence table.</p>`:''}`;
-  bindKeys($('#tl'),'.tp',el=>{const l=lanesMap.get(el.dataset.l);openRows({eyebrow:fieldLabel(l.field),title:`PMID ${el.dataset.p}`,rows:l.rows.filter(e=>e.pmid===el.dataset.p)})});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&document.title.startsWith('✓'))document.title='MAPLES'});
+
+// Shared website (e.g. Hugging Face): no Settings, and say plainly where the genes go.
+function applyHosted(){
+  $('#openSettings').hidden=true;
+  $('#footnote').innerHTML=`Hosted version of MAPLES. Your genes go to public literature databases and to the AI service the host has set up: ${esc(SET.service_label||'not named')}.
+    Please don't enter unpublished or confidential gene lists here: <a href="https://github.com/ramadatta/MAPLE" target="_blank" rel="noopener">install MAPLES on your own computer</a> for private work, with your own AI key or a local model.<br>
+    Research use only, not for clinical or diagnostic decisions. Results are read from papers by an AI model and can contain mistakes: check the quotes before relying on them.`;
 }
 
 /* ---------- start ---------- */
@@ -810,7 +872,8 @@ function renderTimeline(){
   if(last){$('#genes').value=last.genes||'';$('#tissue').value=last.tissue||'';$('#disease').value=last.disease||'';$('#species').value=last.species||''}
   try{SET=await api('/api/settings')}catch(e){SET=null}
   renderChip();
-  if(SET&&!SET.has_llm_key){fillSettings();$('#settings').showModal()}
+  if(SET&&SET.hosted)applyHosted();
+  else if(SET&&!SET.has_llm_key){fillSettings();$('#settings').showModal()}
   const m=location.hash.match(/^#run-([a-f0-9]+)(?:\/([a-z-]+))?(?:\/(focused|agnostic))?$/);
   if(m){WANT={view:m[2],mode:m[3]};RUN_ID=m[1];$('#runBtn').disabled=true;poll(m[1])}
 })();

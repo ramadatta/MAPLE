@@ -56,6 +56,13 @@ TEXT_ALIASES: dict[str, tuple[str, ...]] = {
     "CDH2": ("N-cadherin",),
     "VIM": ("vimentin",),
     "POSTN": ("periostin",),
+    # VEGF receptors and other genes better known by their receptor/protein names
+    "KDR": ("VEGFR2", "VEGFR-2", "FLK1", "Flk-1"),
+    "FLT4": ("VEGFR3", "VEGFR-3"),
+    "FLT1": ("VEGFR1", "VEGFR-1"),
+    "TEK": ("TIE2", "Tie-2"),
+    "APLN": ("apelin",),
+    "CXCR4": ("CD184",),
     # MHC class II: mouse H2 genes have different symbols
     "HLA-DRA": ("H2-Ea",),
     "HLA-DRB1": ("H2-Eb1",),
@@ -65,7 +72,24 @@ TEXT_ALIASES: dict[str, tuple[str, ...]] = {
 
 
 def aliases(gene: str) -> tuple[str, ...]:
-    return TEXT_ALIASES.get(gene.upper(), ())
+    """Other names for ``gene``. Works from the symbol or from any listed alias
+    (VEGFR3 -> FLT4, VEGFR-3), so it does not matter which name the user typed."""
+    sym = official_symbol(gene)
+    names = (sym,) + TEXT_ALIASES.get(sym, ())
+    return tuple(n for n in names if n.upper() != gene.upper())
+
+
+@lru_cache(maxsize=1)
+def _alias_index() -> dict[str, str]:
+    return {a.upper(): sym for sym, names in TEXT_ALIASES.items() for a in names}
+
+
+def official_symbol(gene: str) -> str:
+    """The symbol a name belongs to: 'VEGFR3' -> 'FLT4'; unknown names come back upper-cased."""
+    up = gene.strip().upper()
+    if up in TEXT_ALIASES:
+        return up
+    return _alias_index().get(up, up)
 
 
 @lru_cache(maxsize=4096)

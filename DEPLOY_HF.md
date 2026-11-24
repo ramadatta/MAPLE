@@ -1,6 +1,12 @@
-# Deploying MAPLE to Hugging Face Spaces (free, public)
+# Deploying MAPLES to Hugging Face Spaces (free, public)
 
-MAPLE runs as a Docker Space. Your Blablador key lives in the Space **Secrets**
+The Space runs the MAPLES browser app (`maples ui`, see `Dockerfile`) in **hosted
+mode**: the AI key and service come only from the Space secrets, the Settings screen
+is hidden, and visitors cannot read, replace or redirect the key. At most
+`MAPLES_MAX_HOSTED_RUNS` analyses (default 3) run at once; others are asked to try
+again in a few minutes. Updating the Space is just `git push space <branch>:main`.
+
+MAPLES runs as a Docker Space. Your Blablador key lives in the Space **Secrets**
 (encrypted, not in the repo, not visible to users). `USE_ENV_TOKEN_ONLY=true`
 means visitors never see it and never need their own token.
 

@@ -267,6 +267,9 @@ def test_fulltext_discovery_adds_paper_before_abstract_ranking(monkeypatch):
     monkeypatch.setattr(ncbi_pmc_service_mod, "NCBIPMCService", FakeNCBIPMCService)
     monkeypatch.setattr(pubmed_mod.cfg, "ENABLE_FULLTEXT", True)
     monkeypatch.setattr(pubmed_mod.cfg, "ENABLE_FULLTEXT_DISCOVERY", True)
+    # keep the test offline: no real preprint / OpenAlex searches
+    monkeypatch.setattr(pubmed_mod.cfg, "ENABLE_PREPRINTS", False)
+    monkeypatch.setattr(pubmed_mod.cfg, "ENABLE_OPENALEX", False)
     monkeypatch.setattr(pubmed_mod.cfg, "FULLTEXT_DISCOVERY_MAX_PAPERS", 3)
 
     result = pubmed_mod.retrieve_papers(
@@ -317,6 +320,9 @@ def test_fulltext_discovery_updates_existing_pubmed_record(monkeypatch):
     monkeypatch.setattr(ncbi_pmc_service_mod, "NCBIPMCService", FakeNCBIPMCService)
     monkeypatch.setattr(pubmed_mod.cfg, "ENABLE_FULLTEXT", True)
     monkeypatch.setattr(pubmed_mod.cfg, "ENABLE_FULLTEXT_DISCOVERY", True)
+    # keep the test offline: no real preprint / OpenAlex searches
+    monkeypatch.setattr(pubmed_mod.cfg, "ENABLE_PREPRINTS", False)
+    monkeypatch.setattr(pubmed_mod.cfg, "ENABLE_OPENALEX", False)
     monkeypatch.setattr(pubmed_mod.cfg, "FULLTEXT_DISCOVERY_MAX_PAPERS", 3)
 
     result = pubmed_mod.retrieve_papers(

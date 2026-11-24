@@ -1,4 +1,5 @@
-# Dependencies for the Chainlit demo (app.py) used by the Hugging Face Space.
+# Dependencies for the older Chainlit demo (app.py). The Hugging Face Space now runs
+# the browser app from the package (see Dockerfile).
 # For the local app and Python API, install the package instead: pip install -e .
 chainlit
 openai

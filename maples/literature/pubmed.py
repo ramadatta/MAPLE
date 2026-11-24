@@ -155,6 +155,131 @@ def _add_panel_discovery_queries(
     return disc_idx
 
 
+class _DiscoveryPrefetch:
+    """Start the Europe PMC discovery searches as soon as retrieval begins.
+
+    Europe PMC full-text searches with long OR lists take 10-40 s each on a slow
+    day, and a run sends two dozen of them (open full text + preprints). Started up
+    front, they run while PubMed is searched instead of after it. Anything not back
+    within ``budget_seconds`` of the start is dropped, so one stuck search cannot
+    hold up the run.
+    """
+
+    def __init__(self, analysis_input: AnalysisInput, budget_seconds: float | None = None,
+                 max_workers: int = 6):
+        import threading
+        import time
+        from concurrent.futures import ThreadPoolExecutor
+
+        from maples.runtime import activity
+
+        self._report = activity.current()  # worker threads don't inherit the run's context
+        self._done = 0
+        self._failed = 0
+        self._lock = threading.Lock()
+
+        self.queries = _fulltext_discovery_queries(analysis_input)
+        self.deadline = time.time() + (budget_seconds or cfg.DISCOVERY_BUDGET_SECONDS)
+        self._pool = None
+        self._fulltext: list = []
+        self._preprint: list = []
+        want_ft = cfg.ENABLE_FULLTEXT and cfg.ENABLE_FULLTEXT_DISCOVERY
+        want_pp = cfg.ENABLE_PREPRINTS
+        if not self.queries or not (want_ft or want_pp):
+            return
+        self._pool = ThreadPoolExecutor(max_workers=max_workers, thread_name_prefix="epmc-discovery")
+        if want_ft:
+            from maples.services.fulltext_service import EuropePMCService
+
+            epmc = EuropePMCService()
+            self._fulltext = [
+                self._pool.submit(epmc.search_open_access, q, max_results=10, open_access_only=False)
+                for q in self.queries
+            ]
+        if want_pp:
+            from maples.services.preprint_service import PreprintService
+
+            pps = PreprintService()
+            self._preprint = [self._pool.submit(pps.search_preprints, q, max_results=10) for q in self.queries]
+        self.total = len(self._fulltext) + len(self._preprint)
+        self._status("searching")
+        for fut in self._fulltext + self._preprint:
+            fut.add_done_callback(self._one_done)
+
+    def _status(self, state: str) -> None:
+        from maples.runtime import activity
+
+        activity.report("europepmc", self._report, state=state, searches_done=self._done,
+                        searches_total=getattr(self, "total", 0), searches_failed=self._failed)
+
+    def _one_done(self, fut) -> None:
+        with self._lock:
+            self._done += 1
+            failed = fut.cancelled() or fut.exception() is not None or not fut.result()
+            self._failed += int(bool(failed))
+        self._status("searching" if self._done < self.total else "reading")
+
+    def _collect(self, futures: list) -> list:
+        import time
+        from concurrent.futures import TimeoutError as FutureTimeout
+
+        out = []
+        for fut in futures:
+            try:
+                out.append(fut.result(timeout=max(0.0, self.deadline - time.time())))
+            except FutureTimeout:
+                out.append(TimeoutError("Europe PMC search did not finish within the time budget"))
+            except Exception as exc:  # noqa: BLE001 - reported per query by the caller
+                out.append(exc)
+        return out
+
+    def fulltext(self) -> list:
+        return self._collect(self._fulltext)
+
+    def preprints(self) -> list:
+        return self._collect(self._preprint)
+
+    def close(self) -> None:
+        if self._pool is not None:
+            self._pool.shutdown(wait=False, cancel_futures=True)
+
+
+def _search_in_parallel(search, queries: list[str], max_workers: int = 4) -> list:
+    """Run ``search(query)`` for every query at once; results keep the query order.
+
+    A failed search returns its exception in place of a result list.
+    """
+    from concurrent.futures import ThreadPoolExecutor
+
+    def safe(query):
+        try:
+            return search(query)
+        except Exception as exc:  # noqa: BLE001 - reported per query by the caller
+            return exc
+
+    if not queries:
+        return []
+    with ThreadPoolExecutor(max_workers=max(1, min(max_workers, len(queries)))) as pool:
+        return list(pool.map(safe, queries))
+
+
+def _fetch_in_parallel(fetch, items: list, max_workers: int = 6) -> list[str]:
+    """Run ``fetch(item)`` for every item at once; returns texts in item order ('' on failure)."""
+    from concurrent.futures import ThreadPoolExecutor
+
+    def safe(item) -> str:
+        try:
+            return fetch(item) or ""
+        except Exception as exc:  # noqa: BLE001 - one paper failing must not stop the rest
+            logger.debug("Parallel full-text fetch failed: %s", exc)
+            return ""
+
+    if not items:
+        return []
+    with ThreadPoolExecutor(max_workers=max(1, min(max_workers, len(items)))) as pool:
+        return list(pool.map(safe, items))
+
+
 def _fulltext_discovery_queries(analysis_input: AnalysisInput) -> list[str]:
     """Europe PMC full-text discovery queries independent of PubMed abstract ranking."""
     genes = [_plain_gene(g) for g in analysis_input.markers if _plain_gene(g)]
@@ -349,6 +474,7 @@ def _add_fulltext_discovery_papers(
     seen_pmids: set[str],
     analysis_input: AnalysisInput,
     audit_notes: list[str],
+    prefetch: "_DiscoveryPrefetch | None" = None,
 ) -> int:
     """Search OA full text before abstract ranking and append readable papers."""
     if not cfg.ENABLE_FULLTEXT or not cfg.ENABLE_FULLTEXT_DISCOVERY:
@@ -369,41 +495,53 @@ def _add_fulltext_discovery_papers(
     max_papers = max(0, cfg.FULLTEXT_DISCOVERY_MAX_PAPERS)
     existing_by_pmid = {p.pmid: p for p in retrieved_papers}
 
-    for query in discovery_queries:
+    # Run the searches at the same time; a slow service then costs one wait, not one per query.
+    if prefetch is not None and prefetch.queries == discovery_queries:
+        searches = prefetch.fulltext()
+    else:
+        searches = _search_in_parallel(
+            lambda q: service.search_open_access(q, max_results=10, open_access_only=False),
+            discovery_queries,
+        )
+    for query, papers in zip(discovery_queries, searches):
         if added >= max_papers:
             break
         searched += 1
-        try:
-            papers = service.search_open_access(
-                query, max_results=10, open_access_only=False
-            )
-        except Exception as exc:
-            logger.debug("Full-text discovery search failed for %r: %s", query, exc)
+        if isinstance(papers, Exception):
+            logger.debug("Full-text discovery search failed for %r: %s", query, papers)
             continue
 
-        for rank, paper in enumerate(papers):
+        # Fetch this query's full texts at the same time, then use them in rank order.
+        wanted = [
+            (rank, paper) for rank, paper in enumerate(papers)
+            if paper.pmid and not (
+                existing_by_pmid.get(paper.pmid) is not None
+                and existing_by_pmid[paper.pmid].full_text
+            )
+        ]
+
+        def fetch(paper) -> str:
+            # NCBI first when the PMCID is known: same open-access text, usually much faster.
+            if paper.pmcid:
+                try:
+                    text = ncbi_service.full_text_for_pmcid(paper.pmcid)
+                    if text:
+                        return text
+                except Exception as exc:
+                    logger.debug("NCBI full-text discovery fetch failed for PMID %s: %s", paper.pmid, exc)
+            try:
+                return service.full_text_for_paper(paper) or ""
+            except Exception as exc:
+                logger.debug("Full-text discovery fetch failed for PMID %s: %s", paper.pmid, exc)
+                return ""
+
+        texts = _fetch_in_parallel(fetch, [p for _, p in wanted])
+        for (rank, paper), full_text in zip(wanted, texts):
             if added >= max_papers:
                 break
-            if not paper.pmid:
-                continue
             existing = existing_by_pmid.get(paper.pmid)
             if existing is not None and existing.full_text:
                 continue
-
-            full_text = ""
-            try:
-                full_text = service.full_text_for_paper(paper)
-            except Exception as exc:
-                logger.debug("Full-text discovery fetch failed for PMID %s: %s", paper.pmid, exc)
-            if not full_text and paper.pmcid:
-                try:
-                    full_text = ncbi_service.full_text_for_pmcid(paper.pmcid)
-                except Exception as exc:
-                    logger.debug(
-                        "NCBI full-text discovery fetch failed for PMID %s: %s",
-                        paper.pmid,
-                        exc,
-                    )
             if not full_text:
                 continue
 
@@ -425,6 +563,9 @@ def _add_fulltext_discovery_papers(
             existing_by_pmid[paper.pmid] = rp
             added += 1
 
+    from maples.runtime import activity
+
+    activity.report("europepmc", fulltext_papers=added + updated)
     audit_notes.append(
         f"Full-text discovery searched {searched} OA queries; "
         f"added {added} and updated {updated} full-text paper(s)"
@@ -438,6 +579,7 @@ def _add_preprint_discovery_papers(
     seen_dois: set[str],
     analysis_input: AnalysisInput,
     audit_notes: list[str],
+    prefetch: "_DiscoveryPrefetch | None" = None,
 ) -> int:
     """Discover bioRxiv/medRxiv preprints for the marker panel and attach full text."""
     if not cfg.ENABLE_PREPRINTS:
@@ -451,10 +593,16 @@ def _add_preprint_discovery_papers(
     service = PreprintService()
     added = 0
     max_papers = max(0, cfg.PREPRINT_DISCOVERY_MAX_PAPERS)
-    for query in queries:
+    if prefetch is not None and prefetch.queries == queries:
+        searches = prefetch.preprints()
+    else:
+        searches = _search_in_parallel(lambda q: service.search_preprints(q, max_results=10), queries)
+    for found in searches:
         if added >= max_papers:
             break
-        for paper in service.search_preprints(query, max_results=10):
+        if isinstance(found, Exception):
+            continue
+        for paper in found:
             if added >= max_papers:
                 break
             doi = paper.doi
@@ -475,6 +623,9 @@ def _add_preprint_discovery_papers(
             retrieved_papers.append(rp)
             added += 1
 
+    from maples.runtime import activity
+
+    activity.report("europepmc", preprint_papers=added, state="done")
     audit_notes.append(
         f"Preprint discovery added {added} bioRxiv/medRxiv full-text paper(s)"
     )
@@ -524,12 +675,18 @@ def _add_openalex_discovery_papers(
     preprint = PreprintService()
     added = 0
 
-    for w in works:
+    todo = [
+        w for w in works
+        if not ((w.pmid and w.pmid in seen_pmids) or (w.doi and w.doi in seen_dois))
+    ]
+    texts = _fetch_in_parallel(
+        lambda w: _open_fulltext_for(w.pmcid, w.doi or "", w.title, ncbi, epmc, preprint), todo
+    )
+    for w, full_text in zip(todo, texts):
         pmid = w.pmid or ""
         doi = w.doi or ""
         if (pmid and pmid in seen_pmids) or (doi and doi in seen_dois):
             continue
-        full_text = _open_fulltext_for(w.pmcid, doi, w.title, ncbi, epmc, preprint)
         if not full_text:
             continue  # nothing openly readable; skip so evidence stays grounded
         if pmid:
@@ -693,6 +850,20 @@ def retrieve_papers(analysis_input: AnalysisInput, papers_per_gene: int = 5) -> 
     queries_used = list(dict.fromkeys(q.query for q in queries))
     audit_notes.append(f"Built {len(queries)} queries for {len(analysis_input.markers)} markers")
 
+    # Slow Europe PMC searches start now and run while PubMed is searched.
+    prefetch = _DiscoveryPrefetch(analysis_input)
+    try:
+        return _retrieve_with_prefetch(analysis_input, papers_per_gene, queries, queries_used,
+                                       audit_notes, prefetch)
+    finally:
+        prefetch.close()
+
+
+def _retrieve_with_prefetch(analysis_input, papers_per_gene, queries, queries_used, audit_notes,
+                            prefetch) -> RetrievalResult:
+    from maples.runtime import activity
+    from maples.services.pubmed_service import PubMedService
+
     service = PubMedService()
     try:
         gene_papers_map, warnings = service.retrieve_for_queries(
@@ -721,22 +892,33 @@ def retrieve_papers(analysis_input: AnalysisInput, papers_per_gene: int = 5) -> 
             rp = _pubmed_paper_to_retrieved(paper, retrieval_query=gene, retrieval_rank=rank)
             retrieved_papers.append(rp)
 
+    activity.report("phase", text="Waiting for Europe PMC full-text search")
     ft_discovery_added = _add_fulltext_discovery_papers(
-        retrieved_papers, seen_pmids, analysis_input, audit_notes
+        retrieved_papers, seen_pmids, analysis_input, audit_notes, prefetch
     )
     # Full-text-aware discovery for papers whose markers appear only in the body
     # and are missed by abstract search: OpenAlex (primary finder) + Scholar + preprints.
+    activity.report("phase", text="Checking OpenAlex for papers that mention your genes only in the full text")
     openalex_added = _add_openalex_discovery_papers(
         retrieved_papers, seen_pmids, seen_dois, analysis_input, audit_notes
     )
     scholar_added = _add_scholar_discovery_papers(
         retrieved_papers, seen_pmids, seen_dois, analysis_input, audit_notes
     )
+    activity.report("phase", text="Collecting bioRxiv / medRxiv preprints from Europe PMC")
     preprint_added = _add_preprint_discovery_papers(
-        retrieved_papers, seen_pmids, seen_dois, analysis_input, audit_notes
+        retrieved_papers, seen_pmids, seen_dois, analysis_input, audit_notes, prefetch
     )
     fulltext_added = ft_discovery_added + openalex_added + scholar_added + preprint_added
 
+    activity.report("phase", text="Collecting every single-cell paper that names 2 or more of your genes")
+    from maples.literature.pool import add_sc_pool
+
+    pool_facts = add_sc_pool(
+        retrieved_papers, seen_pmids, analysis_input, audit_notes, service,
+        lambda pub: _pubmed_paper_to_retrieved(pub, retrieval_query="__pool__"),
+    )
+    activity.report("phase", text="Looking up publication type and authors in PubMed")
     backfilled = _backfill_pubmed_metadata(retrieved_papers, service)
     if backfilled:
         audit_notes.append(f"Filled in publication type/authors for {backfilled} paper(s) from PubMed")
@@ -759,4 +941,5 @@ def retrieve_papers(analysis_input: AnalysisInput, papers_per_gene: int = 5) -> 
         fulltext_count=0,  # fulltext enrichment happens in retrieval_agent
         queries_used=queries_used,
         audit_notes=audit_notes,
+        pool=pool_facts,
     )

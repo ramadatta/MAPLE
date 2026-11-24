@@ -32,6 +32,8 @@ from maples.models import (
     MatchStrength,
     CandidateSpecificity,
 )
+from pydantic import BaseModel, Field
+
 from maples import config as cfg
 from maples.extraction.validators import (
     validate_quote_fragments,
@@ -314,6 +316,14 @@ def run_evidence_agent(
             continue
         candidates.append((paper, found_genes))
 
+    # Single-cell pool papers have their own reading slots (on top of the regular
+    # budget), so the focused single-cell literature is not crowded out.
+    pool_candidates = [c for c in candidates if c[0].in_pool]
+    candidates = [c for c in candidates if not c[0].in_pool]
+    pool_chosen, pool_screened_out, pool_not_read = _choose_pool_papers(
+        pool_candidates, user_genes, llm, audit_notes
+    )
+
     # When the user named their own field, alternate between papers that look like
     # their field and papers from other fields, so neither crowds out the other
     # within the reading budget. Rank order is kept inside each side.
@@ -342,6 +352,10 @@ def run_evidence_agent(
                 f"({llm_budget} papers) exhausted"
             )
             continue
+        eligible.append(paper)
+        eligible_found.append(found_genes)
+
+    for paper, found_genes in pool_chosen:
         eligible.append(paper)
         eligible_found.append(found_genes)
 
@@ -432,7 +446,97 @@ def run_evidence_agent(
         papers_no_celltype_assignment=papers_no_assignment,
         abstract_only_papers=abstract_only,
         validation_rejected_rows=0,
+        pool_read=[p.pmid for p, _ in pool_chosen],
+        pool_screened_out=pool_screened_out,
+        pool_not_read=pool_not_read,
     )
+
+
+SKIM_SYSTEM = (
+    "You screen paper abstracts for a literature tool. For each numbered abstract, decide "
+    "whether it describes at least one of the listed genes as expressed in, enriched in, or "
+    "marking a specific cell type, cell subpopulation or cell state (from single-cell, spatial, "
+    "imaging or other data). Answer NO for abstracts that only mention the genes in passing, "
+    "study signalling or drugs without tying the genes to a cell type, or are about something "
+    "else. When unsure, answer YES: a later step reads the full paper."
+)
+SKIM_USER = (
+    "Genes: {genes}\n\nAbstracts:\n{items}\n\n"
+    'Return JSON: {{"relevant": [numbers of the abstracts that qualify]}}'
+)
+
+
+class _SkimOut(BaseModel):
+    relevant: list[int] = Field(default_factory=list)
+
+
+def _skim_pool(llm, papers: list, user_genes: list[str]) -> set[str]:
+    """PMIDs whose abstracts tie the genes to a cell type. A batch that fails is kept."""
+    from maples.genes import describe_for_prompt
+
+    size = max(1, cfg.SC_POOL_SKIM_BATCH)
+    batches = [papers[i:i + size] for i in range(0, len(papers), size)]
+
+    def run(batch) -> set[str]:
+        items = "\n".join(
+            f"{n}. {p.title} — {(p.abstract or '')[:1200]}" for n, p in enumerate(batch, 1)
+        )
+        try:
+            out = llm.complete_json(
+                system=SKIM_SYSTEM,
+                user=SKIM_USER.format(genes=describe_for_prompt(user_genes), items=items),
+                schema=_SkimOut,
+            )
+            return {batch[n - 1].pmid for n in out.relevant if isinstance(n, int) and 1 <= n <= len(batch)}
+        except Exception as exc:  # never lose papers because a skim call failed
+            logger.warning("Abstract skim failed for a batch; keeping it: %s", exc)
+            return {p.pmid for p in batch}
+
+    keep: set[str] = set()
+    with ThreadPoolExecutor(max_workers=min(8, len(batches)) or 1) as pool:
+        for part in pool.map(run, batches):
+            keep |= part
+    return keep
+
+
+def _choose_pool_papers(pool_candidates, user_genes, llm, audit_notes):
+    """Pick which single-cell pool papers get a full read.
+
+    Up to SC_POOL_READ_MAX are read. A bigger pool is skimmed first: the AI reads the
+    abstracts in batches and only those tying the genes to a cell type go forward.
+    Returns (chosen [(paper, genes)], screened-out PMIDs, not-read PMIDs).
+    """
+    if not pool_candidates:
+        return [], [], []
+    limit = max(0, cfg.SC_POOL_READ_MAX)
+    screened_out: list[str] = []
+    kept = pool_candidates
+    if len(pool_candidates) > limit and llm is not None:
+        from maples.runtime import activity
+
+        activity.report("phase", text=f"Skimming {len(pool_candidates)} single-cell abstracts")
+        relevant = _skim_pool(llm, [p for p, _ in pool_candidates], user_genes)
+        kept = [c for c in pool_candidates if c[0].pmid in relevant]
+        screened_out = [p.pmid for p, _ in pool_candidates if p.pmid not in relevant]
+        audit_notes.append(
+            f"Skimmed {len(pool_candidates)} single-cell pool abstracts: {len(kept)} tie the genes "
+            f"to a cell type, {len(screened_out)} screened out"
+        )
+    chosen, not_read = kept[:limit], [p.pmid for p, _ in kept[limit:]]
+    # full text for the chosen ones that do not have it yet (abstract skim needed none)
+    need = [p for p, _ in chosen if not p.full_text]
+    if need and cfg.ENABLE_FULLTEXT:
+        try:
+            from maples.literature.pmc import enrich_with_fulltext
+
+            enrich_with_fulltext(need, max_papers=len(need))
+        except Exception as exc:
+            logger.warning("Full text for single-cell pool papers failed: %s", exc)
+    audit_notes.append(
+        f"Single-cell pool: reading {len(chosen)} paper(s)"
+        + (f"; {len(not_read)} left unread (reading slots full)" if not_read else "")
+    )
+    return chosen, screened_out, not_read
 
 
 def _evidence_type_rank(evidence_type: str) -> int:

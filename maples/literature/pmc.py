@@ -69,11 +69,16 @@ def enrich_with_fulltext(papers: list, max_papers: int = 20) -> None:
                 logger.debug("Preprint full-text fallback failed for %s: %s", paper.pmid, exc)
         return full_text or ""
 
+    from maples.runtime import activity
+
     processed = 0
+    finished = 0
+    activity.report("fulltext", done=0, total=len(candidates), found=0)
     max_workers = max(1, min(len(candidates), cfg.FULLTEXT_FETCH_CONCURRENCY))
     with ThreadPoolExecutor(max_workers=max_workers) as pool:
         future_map = {pool.submit(_fetch, paper): paper for paper in candidates}
         for future in as_completed(future_map):
+            finished += 1
             paper = future_map[future]
             try:
                 full_text = future.result()
@@ -83,5 +88,6 @@ def enrich_with_fulltext(papers: list, max_papers: int = 20) -> None:
             if full_text:
                 paper.full_text = full_text
                 processed += 1
+            activity.report("fulltext", done=finished, total=len(candidates), found=processed)
 
     logger.debug("Enriched %d papers with full text (limit=%d)", processed, max_papers)

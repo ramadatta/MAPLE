@@ -37,11 +37,19 @@ each row is a paper that links some of your genes to a named cell type or cell s
 the exact supporting sentence(s), the PMID, and the paper's own tissue, disease and species.
 A summary and a skeptical "devil's advocate" critique sit on top of the table.
 
-The local app shows the results in six tabs: a summary (how independent the evidence is,
-where it comes from, different names for the same population), a **field map** (your field
-in the centre, near and far fields around it; or your genes in the centre when no field is
-given), a **gene × field** dot plot, a **body map** with a year slider, a **timeline**, and a
-filterable evidence table. Every dot opens the exact quotes behind it.
+The local app shows the results in five tabs: a summary (how independent the evidence is,
+where it comes from, different names for the same population), a sortable, filterable
+**evidence table**, a **field map** (your field in the centre, near and far fields around
+it; or your genes in the centre when no field is given), a **gene × field** dot plot, and a
+**body map**. Every dot opens the exact quotes behind it.
+
+Besides its regular searches, MAPLES fetches every PubMed paper whose title or abstract
+names **2 or more of your genes together with single-cell words** (other names of one gene,
+such as VEGFR3 and FLT4, count once) and reads them on top of the regular selection. The
+summary lists each of these papers and whether it was read, quoted, or left out.
+
+MAPLES reads a selection of papers, not all of them, so it does not tell you which paper
+first described a gene.
 
 Cell-type labels always come from the retrieved papers, never from hard-coded marker rules
 or the model's background knowledge.

@@ -55,15 +55,24 @@ def run_retrieval_agent(analysis_input: AnalysisInput) -> RetrievalResult:
 
     # Cap at MAX_EVIDENCE_PAPERS after ranking (best papers first)
     if len(papers) > cfg.MAX_EVIDENCE_PAPERS:
-        papers = papers[: cfg.MAX_EVIDENCE_PAPERS]
+        top = papers[: cfg.MAX_EVIDENCE_PAPERS]
+        # single-cell pool papers are always kept: they were fetched on purpose
+        papers = top + [p for p in papers[cfg.MAX_EVIDENCE_PAPERS:] if p.in_pool]
         result.audit_notes.append(
-            f"Capped to {cfg.MAX_EVIDENCE_PAPERS} papers (MAX_EVIDENCE_PAPERS)"
+            f"Capped to {cfg.MAX_EVIDENCE_PAPERS} papers (MAX_EVIDENCE_PAPERS) plus single-cell pool papers"
         )
 
     # --- Step 2: Full-text enrichment on top-ranked papers ---
     if cfg.ENABLE_FULLTEXT and papers:
+        from maples.runtime import activity
+
+        activity.report("phase", text="Fetching full text for the best-matching papers")
         try:
             enrich_with_fulltext(papers, max_papers=cfg.LLM_EXTRACTION_MAX_PAPERS)
+            pool = [p for p in papers if p.in_pool]
+            if pool:
+                activity.report("phase", text="Fetching full text for the single-cell papers")
+                enrich_with_fulltext(pool, max_papers=cfg.SC_POOL_READ_MAX)
             ft_count = sum(1 for p in papers if p.full_text)
             result.fulltext_count = ft_count
             result.audit_notes.append(f"Full text fetched for {ft_count} papers")

@@ -25,6 +25,14 @@ _WRAP_CHARS = "[](){}\"'`"
 # A token must contain at least one letter and only gene-symbol-ish characters.
 _VALID_SYMBOL = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,19}$")
 
+# Joining and filler words people type between genes. None of these is an
+# official gene symbol, so they are dropped (and reported) rather than searched.
+_FILLER_WORDS = frozenset({
+    "AND", "OR", "NOT", "THE", "WITH", "WITHOUT", "FROM", "FOR", "IN", "OF", "TO",
+    "BY", "VS", "VERSUS", "PLUS", "ALSO", "ETC", "GENE", "GENES", "MARKER",
+    "MARKERS", "CELL", "CELLS",
+})
+
 # Pure numbers / floats / scientific notation (e.g. "0.001", "-2.5", "1.2e-3").
 _NUMERIC = re.compile(r"^[+-]?\d*\.?\d+([eE][+-]?\d+)?$")
 
@@ -53,6 +61,7 @@ def parse_genes(raw_input: str) -> tuple[list[str], list[str]]:
     tokens = _GENE_SPLIT_PATTERN.split(text)
     seen: set[str] = set()
     genes: list[str] = []
+    dropped: list[str] = []
 
     for token in tokens:
         gene = _clean_token(token)
@@ -66,10 +75,18 @@ def parse_genes(raw_input: str) -> tuple[list[str], list[str]]:
             continue
         if not _VALID_SYMBOL.match(gene):
             continue
+        if gene in _FILLER_WORDS:
+            if gene not in dropped:
+                dropped.append(gene)
+            continue
         if gene not in seen:
             seen.add(gene)
             genes.append(gene)
 
+    if dropped:
+        warnings.append(
+            "Ignored " + ", ".join(dropped) + ": not gene symbols."
+        )
     if 0 < len(genes) < 3:
         warnings.append(
             f"Only {len(genes)} gene(s) provided. At least 3 markers are recommended "

@@ -13,6 +13,7 @@ import xml.etree.ElementTree as ET
 
 import requests
 
+from maples.services import host_health
 from maples.services.schemas import PubMedPaper
 from maples.services.cache_service import get_cache
 
@@ -25,7 +26,9 @@ logger = logging.getLogger(__name__)
 
 EPMC_SEARCH_URL = "https://www.ebi.ac.uk/europepmc/webservices/rest/search"
 EPMC_FULLTEXT_URL = "https://www.ebi.ac.uk/europepmc/webservices/rest/{source}/{pmcid}/fullTextXML"
-REQUEST_TIMEOUT = 15
+# (connect, read): fail fast if the host is unreachable, but wait for a slow answer.
+# Europe PMC full-text searches take 10-40 s on a slow day; a 15 s limit made most fail.
+REQUEST_TIMEOUT = (5, 60)
 RATE_LIMIT_SECONDS = 0.15
 
 
@@ -45,9 +48,9 @@ class EuropePMCService:
     def _get(self, url: str, params: dict | None = None) -> requests.Response | None:
         self._rate_limit()
         try:
-            resp = requests.get(url, params=params, timeout=REQUEST_TIMEOUT)
-            resp.raise_for_status()
-            return resp
+            return host_health.patient_get(url, params=params, timeout=REQUEST_TIMEOUT)
+        except host_health.HostSkipped:
+            return None
         except requests.RequestException as exc:
             if "/fullTextXML" in url and "404" in str(exc):
                 logger.debug("Europe PMC full text unavailable (%s): %s", url, exc)

@@ -138,9 +138,30 @@ def mask(value: str) -> str:
     return "•" * 6 + value[-4:] if len(value) > 8 else "•" * 6
 
 
+def hosted_mode() -> bool:
+    """True when MAPLES runs as a shared website (e.g. a Hugging Face Space).
+
+    Then the AI key and service come only from the host's environment (Space
+    secrets): visitors cannot see, replace or redirect them, so nobody can point
+    the service address at their own server and receive the host's key.
+    """
+    flag = lambda k: os.getenv(k, "").strip().lower() in ("1", "true", "yes")
+    return flag("MAPLES_HOSTED") or flag("USE_ENV_TOKEN_ONLY")
+
+
 def public_view() -> dict[str, Any]:
     """Current effective settings, safe to show in the UI (secrets masked)."""
-    view: dict[str, Any] = {}
+    if hosted_mode():
+        preset = next((k for k, p in PROVIDER_PRESETS.items()
+                       if p["base_url"] and p["base_url"] in os.environ.get("OPENAI_BASE_URL", "")), "custom")
+        return {
+            "hosted": True,
+            "has_llm_key": bool(os.environ.get("OPENAI_API_KEY") or os.environ.get("GITLAB_TOKEN")),
+            "OPENAI_MODEL": os.environ.get("OPENAI_MODEL", ""),
+            "service_label": PROVIDER_PRESETS.get(preset, {}).get("label", "AI service set by the host"),
+            "presets": {},
+        }
+    view: dict[str, Any] = {"hosted": False}
     for key in SETTING_KEYS:
         value = os.environ.get(key, "")
         view[key] = mask(value) if key in SECRET_KEYS else value

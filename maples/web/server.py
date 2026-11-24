@@ -15,6 +15,7 @@ GET  /api/run/{job_id}      progress, then the result
 from __future__ import annotations
 
 import asyncio
+import os
 import logging
 import time
 import uuid
@@ -45,6 +46,9 @@ STAGES: list[tuple[str, str]] = [
 _STAGE_INDEX = {key: i for i, (key, _) in enumerate(STAGES)}
 
 _LOCAL_HOSTS = {"127.0.0.1", "localhost", "[::1]", "::1"}
+# On a shared website, how many analyses may run at once (each takes 3-6 minutes
+# and uses the host's AI quota); more get a "busy, try again" message.
+MAX_HOSTED_RUNS = int(os.getenv("MAPLES_MAX_HOSTED_RUNS", "3"))
 
 
 class RunRequest(BaseModel):
@@ -55,9 +59,10 @@ class RunRequest(BaseModel):
 
 
 class Job:
-    def __init__(self, genes: list[str], request: RunRequest):
+    def __init__(self, genes: list[str], request: RunRequest, input_notes: Optional[list[str]] = None):
         self.id = uuid.uuid4().hex[:12]
         self.genes = genes
+        self.input_notes = list(input_notes or [])
         self.request = request
         self.status = "running"  # running | done | error
         self.stage_index = 0
@@ -70,6 +75,12 @@ class Job:
         self.papers_done = 0
         self.papers_total = 0
         self.live_rows: list[dict[str, Any]] = []
+        # Live status of slow sources, e.g. {"europepmc": {"searches_done": 9, ...}}
+        self.sources: dict[str, dict[str, Any]] = {}
+
+    def report_source(self, source: str, fields: dict[str, Any]) -> None:
+        # Called from worker threads; replace the dict so readers never see it half-updated.
+        self.sources = {**self.sources, source: {**self.sources.get(source, {}), **fields}}
 
     def to_dict(self) -> dict[str, Any]:
         end = self.finished or time.time()
@@ -77,6 +88,7 @@ class Job:
             "id": self.id,
             "status": self.status,
             "genes": self.genes,
+            "input_notes": self.input_notes,
             "stages": [label for _, label in STAGES],
             "stage_index": self.stage_index,
             "detail": self.detail,
@@ -87,9 +99,36 @@ class Job:
                 "quotes": len(self.live_rows),
                 "recent": self.live_rows[-6:][::-1],
             },
+            "sources": self.sources,
             "result": self.result,
             "error": self.error,
         }
+
+
+def _pool_payload(retrieval, extraction, evidence: list) -> dict[str, Any]:
+    """Single-cell pool facts plus every pool paper and what happened to it."""
+    facts = dict(getattr(retrieval, "pool", None) or {})
+    if not facts or retrieval is None:
+        return facts
+    read = set(getattr(extraction, "pool_read", []) or [])
+    screened = set(getattr(extraction, "pool_screened_out", []) or [])
+    quoted = {e.get("pmid") for e in evidence}
+    papers = []
+    for p in retrieval.retrieved_papers:
+        if not p.in_pool:
+            continue
+        if p.pmid in read:
+            status = "quoted" if p.pmid in quoted else "read_no_quote"
+        elif p.pmid in screened:
+            status = "screened_out"
+        else:
+            status = "not_read"
+        papers.append({"pmid": p.pmid, "title": p.title, "year": p.publication_year,
+                       "journal": p.journal, "status": status})
+    order = {"quoted": 0, "read_no_quote": 1, "not_read": 2, "screened_out": 3}
+    papers.sort(key=lambda x: (order[x["status"]], -(x["year"] or 0)))
+    counts = {k: sum(1 for x in papers if x["status"] == k) for k in order}
+    return {**facts, **counts, "papers": papers}
 
 
 def _result_payload(result) -> dict[str, Any]:
@@ -106,6 +145,7 @@ def _result_payload(result) -> dict[str, Any]:
         "papers_excluded": extraction.excluded_paper_count if extraction else 0,
         "quotes_rejected": extraction.validation_rejected_rows if extraction else 0,
     }
+    payload["sc_pool"] = _pool_payload(retrieval, extraction, payload.get("evidence") or [])
     payload["critique"] = (
         {
             "summary": devils.critique_summary,
@@ -145,12 +185,19 @@ def create_app() -> FastAPI:
     async def index():
         return FileResponse(STATIC_DIR / "index.html", headers={"Cache-Control": "no-store"})
 
+    @app.get("/leaf.svg")
+    def leaf():
+        return FileResponse(STATIC_DIR / "leaf.svg", media_type="image/svg+xml",
+                            headers={"Cache-Control": "public, max-age=86400"})
+
     @app.get("/api/settings")
     async def get_settings():
         return user_settings.public_view()
 
     @app.post("/api/settings")
     async def post_settings(values: dict[str, Any]):
+        if user_settings.hosted_mode():
+            raise HTTPException(403, "Settings are fixed on this hosted version of MAPLES.")
         clean: dict[str, Any] = {}
         for key, value in values.items():
             if key not in user_settings.SETTING_KEYS:
@@ -165,6 +212,8 @@ def create_app() -> FastAPI:
 
     @app.post("/api/settings/test")
     async def test_settings():
+        if user_settings.hosted_mode():
+            raise HTTPException(403, "Settings are fixed on this hosted version of MAPLES.")
         from maples.api import _make_llm_from_env
 
         llm = _make_llm_from_env()
@@ -189,14 +238,22 @@ def create_app() -> FastAPI:
         from maples.api import _make_llm_from_env
         from maples.utils.gene_parser import parse_genes
 
-        genes, _warnings = parse_genes(req.genes or "")
+        if user_settings.hosted_mode():
+            running = sum(1 for j in jobs.values() if j.status == "running")
+            if running >= MAX_HOSTED_RUNS:
+                raise HTTPException(
+                    429,
+                    f"MAPLES is busy with {running} other analyses right now. Please try again in a few "
+                    "minutes, or install MAPLES on your own computer to run it any time.",
+                )
+        genes, input_notes = parse_genes(req.genes or "")
         if not genes:
             raise HTTPException(400, "No gene symbols found. Paste genes separated by commas, spaces or new lines.")
         llm = _make_llm_from_env()
         if llm is None:
             raise HTTPException(400, "No API key is set. Open Settings and add your key first.")
 
-        job = Job(genes, req)
+        job = Job(genes, req, input_notes)
         jobs[job.id] = job
         while len(jobs) > MAX_JOBS:
             jobs.popitem(last=False)
@@ -221,7 +278,9 @@ def create_app() -> FastAPI:
 
         async def run() -> None:
             from maples.api import annotate_async
+            from maples.runtime import activity
 
+            activity.set_reporter(job.report_source)  # this task's context only
             try:
                 result = await annotate_async(
                     genes,

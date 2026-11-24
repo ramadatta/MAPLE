@@ -8,6 +8,10 @@ ENABLE_FULLTEXT_DISCOVERY = os.getenv("MAPLE_ENABLE_FULLTEXT_DISCOVERY", "true")
     "0", "false", "no"
 )
 FULLTEXT_DISCOVERY_MAX_PAPERS = int(os.getenv("MAPLE_FULLTEXT_DISCOVERY_MAX_PAPERS", "12"))
+# Seconds from the start of retrieval that Europe PMC discovery searches may take.
+# They run alongside PubMed and are worth waiting for (richer full-text results);
+# searches still running after this are dropped so a run cannot hang.
+DISCOVERY_BUDGET_SECONDS = float(os.getenv("MAPLE_DISCOVERY_BUDGET_SECONDS", "240"))
 ENABLE_LLM_EXTRACTION = os.getenv("MAPLE_ENABLE_LLM_EXTRACTION", "true").lower() not in ("0", "false", "no")
 LLM_EXTRACTION_MAX_PAPERS = int(os.getenv("MAPLE_LLM_EXTRACTION_MAX_PAPERS", "25"))
 # Per-paper LLM extraction calls run concurrently in a bounded thread pool.
@@ -19,7 +23,8 @@ EVIDENCE_EXTRACTION_CONCURRENCY = int(os.getenv("MAPLE_EVIDENCE_EXTRACTION_CONCU
 # Full-text fetches (PMC/EPMC/preprint) run concurrently, but NCBI PMC calls are
 # throttled by a shared rate limiter — keep this modest to respect NCBI's limits
 # (especially on shared hosts like HF Spaces). ~4 is safe with an NCBI API key.
-FULLTEXT_FETCH_CONCURRENCY = int(os.getenv("MAPLE_FULLTEXT_FETCH_CONCURRENCY", "4"))
+# 8 at once so one slow Europe PMC download does not hold up the rest (NCBI calls share one throttle).
+FULLTEXT_FETCH_CONCURRENCY = int(os.getenv("MAPLE_FULLTEXT_FETCH_CONCURRENCY", "8"))
 # Characters of PMC full text handed to the LLM extractor per paper (legacy cap,
 # used only when passage selection is switched off).
 LLM_FULLTEXT_CHARS = int(os.getenv("MAPLE_LLM_FULLTEXT_CHARS", "14000"))
@@ -54,3 +59,11 @@ BIOMEDICAL_ENCODER_ENABLED = os.getenv("MAPLE_BIOMEDICAL_ENCODER_ENABLED", "fals
     "1", "true", "yes"
 )
 BIOMEDICAL_ENCODER_MODEL = os.getenv("MAPLE_BIOMEDICAL_ENCODER_MODEL", "").strip()
+
+# Single-cell pool: papers whose title/abstract name 2+ of the user's genes (aliases
+# merged) together with single-cell words. Fetched in full, not just the top hits.
+ENABLE_SC_POOL = os.getenv("MAPLE_ENABLE_SC_POOL", "true").lower() not in ("0", "false", "no")
+SC_POOL_MAX_FETCH = int(os.getenv("MAPLE_SC_POOL_MAX_FETCH", "300"))   # most relevant first if PubMed has more
+SC_POOL_READ_MAX = int(os.getenv("MAPLE_SC_POOL_READ_MAX", "40"))      # reading slots on top of the regular budget
+SC_POOL_SKIM_BATCH = int(os.getenv("MAPLE_SC_POOL_SKIM_BATCH", "20"))  # abstracts per AI skim call
+SC_POOL_MAX_GENES = int(os.getenv("MAPLE_SC_POOL_MAX_GENES", "25"))    # genes used to build the pair search

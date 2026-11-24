@@ -48,6 +48,9 @@ class RetrievedPaper(BaseModel):
     retrieval_reason: str = ""
     authors: list[str] = Field(default_factory=list)
     publication_types: list[str] = Field(default_factory=list)
+    # In the single-cell pool: 2+ of the user's genes (aliases merged) plus
+    # single-cell words in the title/abstract. These get their own reading slots.
+    in_pool: bool = False
 
 class RetrievalResult(BaseModel):
     retrieved_papers: list[RetrievedPaper] = Field(default_factory=list)
@@ -56,6 +59,8 @@ class RetrievalResult(BaseModel):
     fulltext_count: int = 0
     queries_used: list[str] = Field(default_factory=list)
     audit_notes: list[str] = Field(default_factory=list)
+    # Single-cell pool facts: in_pubmed (PubMed count), fetched, kept (2+ distinct genes confirmed)
+    pool: dict = Field(default_factory=dict)
 
 # --- Evidence ---
 
@@ -132,6 +137,11 @@ class ExtractionResult(BaseModel):
     papers_no_celltype_assignment: int = 0
     abstract_only_papers: int = 0
     validation_rejected_rows: int = 0
+    # What happened to each single-cell pool paper: PMIDs read in full, screened
+    # out by the abstract skim, or left unread because the reading slots ran out.
+    pool_read: list[str] = Field(default_factory=list)
+    pool_screened_out: list[str] = Field(default_factory=list)
+    pool_not_read: list[str] = Field(default_factory=list)
 
 # --- Candidates ---
 

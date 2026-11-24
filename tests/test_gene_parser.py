@@ -32,3 +32,9 @@ def test_empty_input():
     genes, warnings = parse_genes("")
     assert genes == []
     assert len(warnings) > 0
+
+
+def test_filler_words_are_dropped_and_reported():
+    genes, warnings = parse_genes("VEGFR2 FLT4 DLL4 and CD34 or ESM1")
+    assert genes == ["VEGFR2", "FLT4", "DLL4", "CD34", "ESM1"]
+    assert any("AND" in w and "OR" in w for w in warnings)
